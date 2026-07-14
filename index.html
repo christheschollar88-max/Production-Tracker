@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Dashboard</title>
+    <style>
+        body { 
+            background-color: #1e1e1e; 
+            color: white; 
+            font-family: sans-serif; 
+        }
+        .dashboard { 
+            display: flex; 
+            gap: 40px; 
+            padding: 50px; 
+            justify-content: center; 
+        }
+        
+        .node {
+            background-color: #121212;
+            border: 2px solid;
+            border-radius: 8px;
+            padding: 15px;
+            width: 150px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .node.fabrication { border-color: #d97706; }
+        .node.assembly { border-color: #db2777; }
+
+        .progress-container {
+            background-color: #333;
+            border-radius: 4px;
+            height: 10px;
+            width: 100%;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            width: 0%; 
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div style="text-align: center; padding: 20px;">
+        <h2>Production Tracker</h2>
+        <label>Google Sheet ID:</label>
+        <input type="text" id="sheetIdInput" value="1NbgGo392aEQYCnQeGf8B7Rgg8fWKksddXLkLlqGFrRg" size="50">
+        <button onclick="fetchData()">Load Job</button>
+    </div>
+
+    <div class="dashboard">
+        <div class="node fabrication">
+            <h4>Fabrication</h4>
+            <span id="fab-text">0%</span>
+            <div class="progress-container">
+                <div id="fab-bar" class="progress-fill" style="background-color: #d97706;"></div>
+            </div>
+        </div>
+
+        <div class="node assembly">
+            <h4>Assembly</h4>
+            <span id="ass-text">0%</span>
+            <div class="progress-container">
+                <div id="ass-bar" class="progress-fill" style="background-color: #db2777;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchData() {
+            const sheetId = document.getElementById('sheetIdInput').value;
+            if (!sheetId) return;
+
+            try {
+                const response = await fetch(`/api/job/${sheetId}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error("Server Error:", data.error);
+                    return;
+                }
+
+                // Update Fabrication Node
+                document.getElementById('fab-text').innerText = data.fabricationProgress;
+                document.getElementById('fab-bar').style.width = data.fabricationProgress;
+
+                // Update Assembly Node
+                document.getElementById('ass-text').innerText = data.assemblyProgress;
+                document.getElementById('ass-bar').style.width = data.assemblyProgress;
+
+            } catch (error) {
+                console.error("Failed to load data", error);
+            }
+        }
+
+        // Run once on load, then check for updates every 10 seconds
+        fetchData();
+        setInterval(fetchData, 10000); 
+    </script>
+</body>
+</html>
