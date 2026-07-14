@@ -1,0 +1,15 @@
+{
+  "name": "Master Build Tracker",
+  "short_name": "BuildTracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e293b",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2083/2083213.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "production-tracker",
+  "version": "1.0.0",
+  "description": "Workshop Production Tracker",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2",
+    "googleapis": "^126.0.0",
+    "socket.io": "^4.7.0"
+  }
+}
