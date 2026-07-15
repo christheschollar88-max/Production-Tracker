@@ -68,9 +68,9 @@
         .close-btn:hover { background: var(--border); }
         #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
 
-        /* Checklist Styles */
-        .checklist-tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .tab-btn { flex: 1; padding: 10px; background: transparent; border: none; color: var(--text-muted); font-weight: bold; cursor: pointer; border-radius: 8px; }
+        /* Checklist Styles (UPDATED FOR 3 TABS) */
+        .checklist-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 10px 5px; background: transparent; border: none; color: var(--text-muted); font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 13px; }
         .tab-btn.active { background: var(--green); color: white; }
         
         .checklist-list { display: flex; flex-direction: column; gap: 8px; }
@@ -174,6 +174,7 @@
         </div>
     </div>
 
+    <!-- MAIN DASHBOARD CARDS -->
     <div class="dashboard">
         <div class="card">
             <h4>Total Stock</h4><span class="percent-text" id="stock-text">0%</span>
@@ -207,18 +208,27 @@
         </div>
     </div>
 
+    <!-- CHECKLIST MODAL (UPDATED TABS) -->
     <div id="checklistModal" class="modal">
         <div class="modal-content">
             <h3><span id="cl-trailer-id" style="color: var(--blue);">M 001</span> Checklists</h3>
             <div class="checklist-tabs">
-                <button class="tab-btn active" id="tab-assembly" onclick="switchTab('assembly')">Receive & Install</button>
+                <button class="tab-btn active" id="tab-receive" onclick="switchTab('receive')">Receive</button>
+                <button class="tab-btn" id="tab-install" onclick="switchTab('install')">Install</button>
                 <button class="tab-btn" id="tab-cutbend" onclick="switchTab('cutbend')">Cut & Bend</button>
             </div>
             
-            <div id="list-assembly" class="checklist-list">
+            <!-- Receive List -->
+            <div id="list-receive" class="checklist-list">
                 <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
             </div>
 
+            <!-- Install List -->
+            <div id="list-install" class="checklist-list" style="display: none;">
+                <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
+            </div>
+
+            <!-- Cut & Bend List -->
             <div id="list-cutbend" class="checklist-list" style="display: none;">
                 <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
             </div>
@@ -227,6 +237,7 @@
         </div>
     </div>
 
+    <!-- SCANNER MODAL -->
     <div id="scanModal" class="modal">
         <div class="modal-content">
             <h3>Scan Trailer QR</h3>
@@ -235,6 +246,7 @@
         </div>
     </div>
 
+    <!-- QA REPORT MODAL -->
     <div id="qaModal" class="modal">
         <div class="modal-content">
             <h3>Report QA Issue</h3>
@@ -245,6 +257,7 @@
         </div>
     </div>
 
+    <!-- CHAT PANEL -->
     <section class="chat-panel" id="chatPanel" aria-label="Team chat">
         <div class="chat-header">
             <div>
@@ -263,6 +276,7 @@
         </form>
     </section>
 
+    <!-- FLOATING CHAT BUTTON -->
     <button class="chat-toggle" id="chatToggle" type="button" aria-label="Open team chat">
         💬<span class="unread-badge" id="unreadBadge">0</span>
     </button>
@@ -351,11 +365,12 @@
 
         // --- CHECKLIST LOGIC ---
         function switchTab(tabName) {
-            document.getElementById('tab-assembly').classList.remove('active');
-            document.getElementById('tab-cutbend').classList.remove('active');
-            document.getElementById('list-assembly').style.display = 'none';
-            document.getElementById('list-cutbend').style.display = 'none';
-
+            // Hide all tabs and content
+            ['receive', 'install', 'cutbend'].forEach(name => {
+                document.getElementById(`tab-${name}`).classList.remove('active');
+                document.getElementById(`list-${name}`).style.display = 'none';
+            });
+            // Show selected tab and content
             document.getElementById(`tab-${tabName}`).classList.add('active');
             document.getElementById(`list-${tabName}`).style.display = 'flex';
         }
@@ -369,7 +384,8 @@
             document.getElementById('cl-trailer-id').innerText = trailerId;
             document.getElementById('checklistModal').style.display = 'flex';
             
-            document.getElementById('list-assembly').innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Fetching live list...</div>';
+            document.getElementById('list-receive').innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Fetching live list...</div>';
+            document.getElementById('list-install').innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Fetching live list...</div>';
             document.getElementById('list-cutbend').innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Fetching live list...</div>';
 
             try {
@@ -377,18 +393,21 @@
                 const data = await res.json();
                 
                 if(!data.success) {
-                    document.getElementById('list-assembly').innerHTML = `<div style="color: var(--red); text-align: center; padding: 20px;">${data.error}</div>`;
+                    document.getElementById('list-receive').innerHTML = `<div style="color: var(--red); text-align: center; padding: 20px;">${data.error}</div>`;
+                    document.getElementById('list-install').innerHTML = `<div style="color: var(--red); text-align: center; padding: 20px;">${data.error}</div>`;
                     return;
                 }
 
-                // Render Assembly List
-                let asmHTML = '';
+                // Render Receive and Install Lists
+                let receiveHTML = '';
+                let installHTML = '';
+                
                 data.assembly.forEach((row, index) => {
                     const task = row[0] || 'Unknown Task';
                     const section = row[1] || 'No Section';
                     const isChecked = (row[2] === 'TRUE' || row[2] === 'true') ? 'checked' : '';
                     
-                    asmHTML += `
+                    const itemHTML = `
                     <div class="checklist-item">
                         <div class="checklist-desc">
                             <strong>${task}</strong>
@@ -396,8 +415,17 @@
                         </div>
                         <input type="checkbox" ${isChecked} onchange="toggleTask('${trailerId}', 'assembly', ${index}, 'D', this)">
                     </div>`;
+
+                    // Sort tasks based on their description
+                    if (task.toLowerCase().includes('receive')) {
+                        receiveHTML += itemHTML;
+                    } else {
+                        installHTML += itemHTML;
+                    }
                 });
-                document.getElementById('list-assembly').innerHTML = asmHTML || '<div style="color: var(--text-muted); padding: 20px;">No assembly tasks found.</div>';
+                
+                document.getElementById('list-receive').innerHTML = receiveHTML || '<div style="color: var(--text-muted); padding: 20px;">No receive tasks found.</div>';
+                document.getElementById('list-install').innerHTML = installHTML || '<div style="color: var(--text-muted); padding: 20px;">No install tasks found.</div>';
 
                 // Render Cut/Bend List
                 let cbHTML = '';
@@ -428,7 +456,8 @@
                 document.getElementById('list-cutbend').innerHTML = cbHTML || '<div style="color: var(--text-muted); padding: 20px;">No cut/bend tasks found.</div>';
 
             } catch (error) {
-                document.getElementById('list-assembly').innerHTML = '<div style="color: var(--red); padding: 20px;">Error connecting to server.</div>';
+                document.getElementById('list-receive').innerHTML = '<div style="color: var(--red); padding: 20px;">Error connecting to server.</div>';
+                document.getElementById('list-install').innerHTML = '<div style="color: var(--red); padding: 20px;">Error connecting to server.</div>';
             }
         }
 
