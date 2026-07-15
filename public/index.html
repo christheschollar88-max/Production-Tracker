@@ -36,10 +36,11 @@
         .header-logo { height: 50px; max-width: 150px; object-fit: contain; border-radius: 4px; }
         .header h2 { margin: 0; font-size: 32px; font-weight: 600; letter-spacing: -0.5px; color: var(--text-main); }
         
-        .header-buttons { display: flex; gap: 10px; }
+        .header-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn-scan { background: var(--green); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-check { background: var(--blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-qa { background: var(--red); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-scan:hover, .btn-qa:hover { filter: brightness(1.2); }
+        .header-buttons button:hover { filter: brightness(1.2); }
 
         .control-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
         select { background-color: var(--bg-page); color: var(--text-main); border: 1px solid var(--border); padding: 10px 15px; border-radius: 8px; font-size: 16px; outline: none; cursor: pointer; min-width: 250px; }
@@ -56,15 +57,31 @@
         .progress-track { background-color: var(--bg-page); border-radius: 999px; height: 8px; width: 100%; overflow: hidden; border: 1px solid var(--border); }
         .progress-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease; }
 
-        /* Modals (Scanner and QA) */
+        /* Modals */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 3000; }
-        .modal-content { background: var(--bg-card); padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; border: 1px solid var(--border); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6); }
+        .modal-content { background: var(--bg-card); padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6); }
         .modal-content h3 { margin-top: 0; margin-bottom: 15px; font-size: 22px; color: var(--text-main); }
+        
         .modal-textarea { width: 100%; height: 100px; background: var(--bg-page); color: var(--text-main); border: 1px solid var(--border); padding: 12px; border-radius: 9px; margin-top: 10px; resize: vertical; outline: none; }
         .modal-textarea:focus { border-color: var(--green); }
         .close-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border); margin-top: 15px; width: 100%; padding: 12px; border-radius: 9px; cursor: pointer; font-weight: bold; }
         .close-btn:hover { background: var(--border); }
         #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+
+        /* Checklist Styles */
+        .checklist-tabs { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 10px; background: transparent; border: none; color: var(--text-muted); font-weight: bold; cursor: pointer; border-radius: 8px; }
+        .tab-btn.active { background: var(--green); color: white; }
+        
+        .checklist-list { display: flex; flex-direction: column; gap: 8px; }
+        .checklist-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-page); border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+        .checklist-desc { flex: 1; padding-right: 15px; line-height: 1.4; }
+        .checklist-meta { font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px; }
+        .checkbox-container { display: flex; gap: 15px; }
+        .check-group { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: var(--text-muted); }
+        
+        input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--green); }
+        input[type="checkbox"]:disabled { opacity: 0.5; cursor: wait; }
 
         /* Chat Styles */
         .login-overlay { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 20px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); }
@@ -107,7 +124,6 @@
         .message-form input { min-width: 0; flex: 1; padding: 11px 12px; color: var(--text-main); background: var(--bg-page); border: 1px solid var(--border); border-radius: 9px; outline: none; }
         .message-form input:focus { border-color: var(--green); }
         .send-button { padding: 0 16px; border: 0; border-radius: 9px; color: white; background: var(--green); font-weight: 700; cursor: pointer; }
-        .send-button:hover { filter: brightness(1.1); }
 
         @media (max-width: 650px) {
             body { padding: 24px 14px; }
@@ -115,6 +131,8 @@
             select { width: 100%; min-width: 0; margin-top: 7px; }
             .chat-panel { right: 16px; bottom: 86px; }
             .chat-toggle { right: 16px; bottom: 16px; }
+            .header-buttons { justify-content: space-between; width: 100%; }
+            .header-buttons button { flex: 1; }
         }
     </style>
 </head>
@@ -138,6 +156,7 @@
             </div>
             <div class="header-buttons">
                 <button class="btn-scan" onclick="openScanner()">📸 Scan</button>
+                <button class="btn-check" onclick="openChecklists()">📝 Checklists</button>
                 <button class="btn-qa" onclick="openQA()">⚠️ QA Report</button>
             </div>
         </div>
@@ -155,7 +174,6 @@
         </div>
     </div>
 
-    <!-- MAIN DASHBOARD CARDS (UPDATED) -->
     <div class="dashboard">
         <div class="card">
             <h4>Total Stock</h4><span class="percent-text" id="stock-text">0%</span>
@@ -170,7 +188,6 @@
             <div class="progress-track"><div id="inst-bar" class="progress-fill"></div></div>
         </div>
         
-        <!-- NEW CARDS -->
         <div class="card">
             <h4>Cutting</h4><span class="percent-text" id="cut-text">0%</span>
             <div class="progress-track"><div id="cut-bar" class="progress-fill"></div></div>
@@ -190,7 +207,26 @@
         </div>
     </div>
 
-    <!-- SCANNER MODAL -->
+    <div id="checklistModal" class="modal">
+        <div class="modal-content">
+            <h3><span id="cl-trailer-id" style="color: var(--blue);">M 001</span> Checklists</h3>
+            <div class="checklist-tabs">
+                <button class="tab-btn active" id="tab-assembly" onclick="switchTab('assembly')">Receive & Install</button>
+                <button class="tab-btn" id="tab-cutbend" onclick="switchTab('cutbend')">Cut & Bend</button>
+            </div>
+            
+            <div id="list-assembly" class="checklist-list">
+                <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
+            </div>
+
+            <div id="list-cutbend" class="checklist-list" style="display: none;">
+                <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
+            </div>
+
+            <button class="close-btn" onclick="closeChecklists()">Close Menu</button>
+        </div>
+    </div>
+
     <div id="scanModal" class="modal">
         <div class="modal-content">
             <h3>Scan Trailer QR</h3>
@@ -199,7 +235,6 @@
         </div>
     </div>
 
-    <!-- QA REPORT MODAL -->
     <div id="qaModal" class="modal">
         <div class="modal-content">
             <h3>Report QA Issue</h3>
@@ -210,7 +245,6 @@
         </div>
     </div>
 
-    <!-- CHAT PANEL -->
     <section class="chat-panel" id="chatPanel" aria-label="Team chat">
         <div class="chat-header">
             <div>
@@ -229,16 +263,14 @@
         </form>
     </section>
 
-    <!-- FLOATING CHAT BUTTON -->
     <button class="chat-toggle" id="chatToggle" type="button" aria-label="Open team chat">
         💬<span class="unread-badge" id="unreadBadge">0</span>
     </button>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(error => console.warn('Service worker registration failed:', error));
-        }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(e => console.warn(e)); }
 
+        // --- DASHBOARD LOGIC ---
         let dashboardData = { totalStock: '0%', trailerList: [] };
         let fleetChart;
 
@@ -263,7 +295,7 @@
         async function fetchTrailers() {
             try {
                 const response = await fetch('/api/trailers');
-                if (!response.ok) throw new Error(`Server returned ${response.status}`);
+                if (!response.ok) throw new Error('Fetch failed');
 
                 dashboardData = await response.json();
                 document.getElementById('last-updated').innerText = `Last synced: ${dashboardData.lastUpdated}`;
@@ -292,7 +324,6 @@
         function updateDashboard() {
             const select = document.getElementById('trailerSelect');
             if (dashboardData.trailerList.length === 0 || select.selectedIndex === -1) return;
-
             const selectedTrailer = dashboardData.trailerList[Number(select.value)];
             if (!selectedTrailer) return;
 
@@ -303,7 +334,6 @@
                 bar.style.backgroundColor = getTrafficColor(percentage);
             }
             
-            // Map the new and shifted data points
             setCardData('rec-text', 'rec-bar', selectedTrailer.receiveProgress);
             setCardData('inst-text', 'inst-bar', selectedTrailer.installProgress);
             setCardData('cut-text', 'cut-bar', selectedTrailer.cuttingProgress);
@@ -319,6 +349,110 @@
             fleetChart.update();
         }
 
+        // --- CHECKLIST LOGIC ---
+        function switchTab(tabName) {
+            document.getElementById('tab-assembly').classList.remove('active');
+            document.getElementById('tab-cutbend').classList.remove('active');
+            document.getElementById('list-assembly').style.display = 'none';
+            document.getElementById('list-cutbend').style.display = 'none';
+
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`list-${tabName}`).style.display = 'flex';
+        }
+
+        async function openChecklists() {
+            const select = document.getElementById('trailerSelect');
+            if (select.selectedIndex === -1 || !dashboardData.trailerList[select.value]) {
+                alert("Please select a trailer from the dropdown first!"); return;
+            }
+            const trailerId = dashboardData.trailerList[select.value].id;
+            document.getElementById('cl-trailer-id').innerText = trailerId;
+            document.getElementById('checklistModal').style.display = 'flex';
+            
+            document.getElementById('list-assembly').innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Fetching live list...</div>';
+            document.getElementById('list-cutbend').innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Fetching live list...</div>';
+
+            try {
+                const res = await fetch(`/api/checklists/${trailerId}`);
+                const data = await res.json();
+                
+                if(!data.success) {
+                    document.getElementById('list-assembly').innerHTML = `<div style="color: var(--red); text-align: center; padding: 20px;">${data.error}</div>`;
+                    return;
+                }
+
+                // Render Assembly List
+                let asmHTML = '';
+                data.assembly.forEach((row, index) => {
+                    const task = row[0] || 'Unknown Task';
+                    const section = row[1] || 'No Section';
+                    const isChecked = (row[2] === 'TRUE' || row[2] === 'true') ? 'checked' : '';
+                    
+                    asmHTML += `
+                    <div class="checklist-item">
+                        <div class="checklist-desc">
+                            <strong>${task}</strong>
+                            <span class="checklist-meta">Section: ${section}</span>
+                        </div>
+                        <input type="checkbox" ${isChecked} onchange="toggleTask('${trailerId}', 'assembly', ${index}, 'D', this)">
+                    </div>`;
+                });
+                document.getElementById('list-assembly').innerHTML = asmHTML || '<div style="color: var(--text-muted); padding: 20px;">No assembly tasks found.</div>';
+
+                // Render Cut/Bend List
+                let cbHTML = '';
+                data.cutBend.forEach((row, index) => {
+                    const subNum = row[0] || 'N/A';
+                    const group = row[1] || 'No Group';
+                    const isBended = (row[2] === 'TRUE' || row[2] === 'true') ? 'checked' : '';
+                    const isCut = (row[3] === 'TRUE' || row[3] === 'true') ? 'checked' : '';
+
+                    cbHTML += `
+                    <div class="checklist-item">
+                        <div class="checklist-desc">
+                            <strong>Sub: ${subNum}</strong>
+                            <span class="checklist-meta">Group: ${group}</span>
+                        </div>
+                        <div class="checkbox-container">
+                            <div class="check-group">
+                                <label>BEND</label>
+                                <input type="checkbox" ${isBended} onchange="toggleTask('${trailerId}', 'cutbend', ${index}, 'D', this)">
+                            </div>
+                            <div class="check-group">
+                                <label>CUT</label>
+                                <input type="checkbox" ${isCut} onchange="toggleTask('${trailerId}', 'cutbend', ${index}, 'E', this)">
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('list-cutbend').innerHTML = cbHTML || '<div style="color: var(--text-muted); padding: 20px;">No cut/bend tasks found.</div>';
+
+            } catch (error) {
+                document.getElementById('list-assembly').innerHTML = '<div style="color: var(--red); padding: 20px;">Error connecting to server.</div>';
+            }
+        }
+
+        function closeChecklists() { document.getElementById('checklistModal').style.display = 'none'; }
+
+        async function toggleTask(trailerId, type, rowIndex, colString, checkboxEl) {
+            checkboxEl.disabled = true; // Prevent double clicking
+            const isChecked = checkboxEl.checked;
+            
+            try {
+                await fetch('/api/update-checklist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ trailerId, type, row: rowIndex, col: colString, isChecked })
+                });
+            } catch (err) {
+                alert("Failed to save check! Reverting.");
+                checkboxEl.checked = !isChecked; // Revert visually
+            } finally {
+                checkboxEl.disabled = false;
+            }
+        }
+
+        // --- SCANNER LOGIC ---
         let html5QrcodeScanner; 
         function openScanner() {
             document.getElementById('scanModal').style.display = 'flex';
@@ -330,9 +464,7 @@
                     updateDashboard();
                     closeScanner();
                     alert(`Loaded Trailer: ${decodedText}`);
-                } else {
-                    alert(`Trailer ID "${decodedText}" not found in system.`);
-                }
+                } else { alert(`Trailer ID "${decodedText}" not found in system.`); }
             });
         }
         function closeScanner() {
@@ -340,46 +472,30 @@
             if (html5QrcodeScanner) html5QrcodeScanner.clear();
         }
 
+        // --- QA LOGIC ---
         function openQA() {
             const select = document.getElementById('trailerSelect');
             if (select.selectedIndex === -1 || !dashboardData.trailerList[select.value]) {
-                alert("Please select a trailer from the dropdown first!");
-                return;
+                alert("Please select a trailer from the dropdown first!"); return;
             }
-            const currentTrailerId = dashboardData.trailerList[select.value].id;
-            document.getElementById('qa-trailer-id').innerText = currentTrailerId;
+            document.getElementById('qa-trailer-id').innerText = dashboardData.trailerList[select.value].id;
             document.getElementById('qaModal').style.display = 'flex';
         }
-        function closeQA() {
-            document.getElementById('qaModal').style.display = 'none';
-            document.getElementById('qa-text').value = ''; 
-        }
+        function closeQA() { document.getElementById('qaModal').style.display = 'none'; document.getElementById('qa-text').value = ''; }
         async function submitQA(event) {
             const trailerId = document.getElementById('qa-trailer-id').innerText;
             const issueText = document.getElementById('qa-text').value;
-
             if (issueText.trim() === '') { alert("Please type an issue description."); return; }
-
-            const submitBtn = event.target;
-            const originalText = submitBtn.innerText;
-            submitBtn.innerText = "Sending...";
-            submitBtn.disabled = true;
+            const submitBtn = event.target; const originalText = submitBtn.innerText;
+            submitBtn.innerText = "Sending..."; submitBtn.disabled = true;
 
             try {
-                const response = await fetch('/api/qa-report', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ trailerId: trailerId, issue: issueText })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    alert("Issue reported to Google Sheets!");
-                    closeQA();
-                } else { alert("Error saving issue."); }
-            } catch (error) { alert("Network error."); } 
-            finally { submitBtn.innerText = originalText; submitBtn.disabled = false; }
+                const res = await fetch('/api/qa-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trailerId, issue: issueText }) });
+                if ((await res.json()).success) { alert("Reported to Google Sheets!"); closeQA(); } else { alert("Error saving issue."); }
+            } catch (error) { alert("Network error."); } finally { submitBtn.innerText = originalText; submitBtn.disabled = false; }
         }
 
+        // --- CHAT LOGIC ---
         const socket = io({ autoConnect: false });
         const loginOverlay = document.getElementById('loginOverlay'), loginForm = document.getElementById('loginForm');
         const nameInput = document.getElementById('nameInput'), loginButton = document.getElementById('loginButton'), loginError = document.getElementById('loginError');
@@ -395,7 +511,6 @@
         function closeChat() { chatPanel.classList.remove('open'); chatToggle.setAttribute('aria-label', 'Open team chat'); }
         function updateUnreadBadge() { unreadBadge.textContent = unreadCount > 99 ? '99+' : String(unreadCount); unreadBadge.classList.toggle('visible', unreadCount > 0); }
         function formatTime(isoTimestamp) { const date = new Date(isoTimestamp); if (Number.isNaN(date.getTime())) return ''; return date.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' }); }
-
         function addMessage(message, countAsUnread = false) {
             const wrapper = document.createElement('div'); wrapper.className = `message${message.username === currentUser ? ' own' : ''}`;
             const meta = document.createElement('div'); meta.className = 'message-meta'; meta.textContent = `${message.username} · ${formatTime(message.timestamp)}`;
@@ -403,10 +518,8 @@
             wrapper.append(meta, bubble); messages.appendChild(wrapper); messages.scrollTop = messages.scrollHeight;
             if (countAsUnread && !chatPanel.classList.contains('open') && message.username !== currentUser) { unreadCount += 1; updateUnreadBadge(); }
         }
-        function addSystemMessage(event) {
-            const line = document.createElement('div'); line.className = 'system-message'; line.textContent = `${event.text} · ${formatTime(event.timestamp)}`;
-            messages.appendChild(line); messages.scrollTop = messages.scrollHeight;
-        }
+        function addSystemMessage(event) { const line = document.createElement('div'); line.className = 'system-message'; line.textContent = `${event.text} · ${formatTime(event.timestamp)}`; messages.appendChild(line); messages.scrollTop = messages.scrollHeight; }
+        
         function joinChat() {
             if (!requestedName || !socket.connected) return;
             socket.timeout(5000).emit('join-chat', requestedName, (error, result) => {
@@ -418,40 +531,20 @@
             });
         }
 
-        loginForm.addEventListener('submit', event => {
-            event.preventDefault(); requestedName = nameInput.value.trim().replace(/\s+/g, ' ').slice(0, 30);
-            if (requestedName.length < 2) { loginError.textContent = 'Enter a name with at least 2 characters.'; return; }
-            loginError.textContent = ''; loginButton.disabled = true; loginButton.textContent = 'Connecting...';
-            if (socket.connected) joinChat(); else socket.connect();
-        });
-
+        loginForm.addEventListener('submit', e => { e.preventDefault(); requestedName = nameInput.value.trim().replace(/\s+/g, ' ').slice(0, 30); if (requestedName.length < 2) { loginError.textContent = 'Enter a valid name.'; return; } loginError.textContent = ''; loginButton.disabled = true; loginButton.textContent = 'Connecting...'; if (socket.connected) joinChat(); else socket.connect(); });
         socket.on('connect', () => { chatStatus.textContent = 'Connected'; joinChat(); });
         socket.on('disconnect', () => { chatStatus.textContent = 'Reconnecting...'; });
-        socket.on('connect_error', () => { chatStatus.textContent = 'Connection unavailable'; loginButton.disabled = false; loginButton.textContent = 'Enter dashboard'; loginError.textContent = 'Cannot connect to the server.'; });
-        socket.on('chat-history', history => { messages.replaceChildren(); history.forEach(message => addMessage(message, false)); });
-        socket.on('chat-message', message => { addMessage(message, true); });
-        socket.on('system-message', event => { addSystemMessage(event); });
+        socket.on('connect_error', () => { chatStatus.textContent = 'Connection unavailable'; loginButton.disabled = false; loginButton.textContent = 'Enter dashboard'; loginError.textContent = 'Cannot connect to server.'; });
+        socket.on('chat-history', history => { messages.replaceChildren(); history.forEach(m => addMessage(m, false)); });
+        socket.on('chat-message', m => { addMessage(m, true); });
+        socket.on('system-message', e => { addSystemMessage(e); });
         socket.on('online-users', users => { onlineUsers.textContent = users.length ? `${users.length} online: ${users.join(', ')}` : 'No users online'; });
-
-        messageForm.addEventListener('submit', event => {
-            event.preventDefault(); const text = messageInput.value.trim(); if (!text || !socket.connected) return;
-            socket.timeout(5000).emit('chat-message', text, (error, result) => {
-                if (!error && result.ok) { messageInput.value = ''; messageInput.focus(); } 
-                else if (!error && result.error) { addSystemMessage({ text: result.error, timestamp: new Date().toISOString() }); }
-            });
-        });
-
+        messageForm.addEventListener('submit', e => { e.preventDefault(); const text = messageInput.value.trim(); if (!text || !socket.connected) return; socket.timeout(5000).emit('chat-message', text, (error, result) => { if (!error && result.ok) { messageInput.value = ''; messageInput.focus(); } else if (!error && result.error) { addSystemMessage({ text: result.error, timestamp: new Date().toISOString() }); } }); });
         chatToggle.addEventListener('click', () => { if (chatPanel.classList.contains('open')) closeChat(); else openChat(); });
         closeChatButton.addEventListener('click', closeChat);
-        changeUserButton.addEventListener('click', () => {
-            socket.disconnect(); currentUser = ''; requestedName = ''; loginOverlay.classList.remove('hidden');
-            nameInput.value = localStorage.getItem('production-chat-name') || ''; loginError.textContent = ''; setTimeout(() => nameInput.focus(), 0);
-        });
+        changeUserButton.addEventListener('click', () => { socket.disconnect(); currentUser = ''; requestedName = ''; loginOverlay.classList.remove('hidden'); nameInput.value = localStorage.getItem('production-chat-name') || ''; loginError.textContent = ''; setTimeout(() => nameInput.focus(), 0); });
 
-        initChart();
-        fetchTrailers();
-        setInterval(fetchTrailers, 5000);
-        setTimeout(() => nameInput.focus(), 0);
+        initChart(); fetchTrailers(); setInterval(fetchTrailers, 5000); setTimeout(() => nameInput.focus(), 0);
     </script>
 </body>
 </html>
