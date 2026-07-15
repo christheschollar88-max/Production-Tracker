@@ -14,7 +14,6 @@
 
     <style>
         :root {
-            /* DARK KHAKI & BUSH GREEN THEME */
             --bg-page: #2b2a26;     
             --bg-card: #363531;     
             --text-main: #d1ccc3;   
@@ -57,7 +56,6 @@
         .progress-track { background-color: var(--bg-page); border-radius: 999px; height: 8px; width: 100%; overflow: hidden; border: 1px solid var(--border); }
         .progress-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease; }
 
-        /* Modals */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 3000; }
         .modal-content { background: var(--bg-card); padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6); }
         .modal-content h3 { margin-top: 0; margin-bottom: 15px; font-size: 22px; color: var(--text-main); }
@@ -68,7 +66,6 @@
         .close-btn:hover { background: var(--border); }
         #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
 
-        /* Checklist Styles (UPDATED FOR 3 TABS) */
         .checklist-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .tab-btn { flex: 1; padding: 10px 5px; background: transparent; border: none; color: var(--text-muted); font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 13px; }
         .tab-btn.active { background: var(--green); color: white; }
@@ -83,7 +80,6 @@
         input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--green); }
         input[type="checkbox"]:disabled { opacity: 0.5; cursor: wait; }
 
-        /* Chat Styles */
         .login-overlay { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 20px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); }
         .login-overlay.hidden { display: none; }
         .login-card { width: min(420px, 100%); padding: 32px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5); }
@@ -299,7 +295,8 @@
 
         async function fetchTrailers() {
             try {
-                const response = await fetch('/api/trailers');
+                // NEW: Cache buster ?t=${Date.now()} added here
+                const response = await fetch(`/api/trailers?t=${Date.now()}`);
                 if (!response.ok) throw new Error('Fetch failed');
 
                 dashboardData = await response.json();
@@ -378,7 +375,8 @@
             document.getElementById('list-cutbend').innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Fetching live list...</div>';
 
             try {
-                const res = await fetch(`/api/checklists/${trailerId}`);
+                // NEW: Cache buster ?t=${Date.now()} added here
+                const res = await fetch(`/api/checklists/${trailerId}?t=${Date.now()}`);
                 const data = await res.json();
                 
                 if(!data.success) {
@@ -449,7 +447,6 @@
 
         function closeChecklists() { document.getElementById('checklistModal').style.display = 'none'; }
 
-        // --- UPDATED TOGGLETASK FUNCTION ---
         async function toggleTask(trailerId, type, rowIndex, colString, checkboxEl) {
             checkboxEl.disabled = true; 
             const isChecked = checkboxEl.checked;
