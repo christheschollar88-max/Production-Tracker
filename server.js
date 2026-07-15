@@ -16,13 +16,10 @@ app.use(cors());
 app.use(express.json()); 
 app.use(express.static('public'));
 
-// ---------------------------------------------------------
-// NEW: Robot Editor Authentication
-// ---------------------------------------------------------
+// Robot Editor Authentication
 const auth = new google.auth.GoogleAuth({
     credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        // This line ensures the giant key formats correctly on Render's Linux servers
         private_key: process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') : '',
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets']
@@ -74,6 +71,10 @@ app.post('/api/update-checklist', async (req, res) => {
             spreadsheetId: ASSEMBLY_SHEET_ID, range: range, valueInputOption: "USER_ENTERED",
             requestBody: { values: [[isChecked]] }
         });
+        
+        // NEW: Force sync with Master Sheet after 1.5 seconds (gives Google Sheets time to calculate the new %)
+        setTimeout(syncWithGoogle, 1500);
+
         res.json({ success: true });
     } catch (error) {
         console.error('Write Error:', error.message);
