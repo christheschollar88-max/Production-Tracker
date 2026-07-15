@@ -15,14 +15,14 @@
     <style>
         :root {
             /* DARK KHAKI & BUSH GREEN THEME */
-            --bg-page: #2b2a26;     /* Deep dark canvas */
-            --bg-card: #363531;     /* Slightly lighter dark cards */
-            --text-main: #d1ccc3;   /* Light khaki for text */
-            --text-muted: #97948b;  /* Muted khaki */
-            --border: #4a4843;      /* Dark border lines */
-            --green: #5e7145;       /* Bush green for buttons/bars */
-            --blue: #4aa4ff;        /* Bright blue for sync indicator */
-            --red: #dc2626;         /* Kept red for QA/errors */
+            --bg-page: #2b2a26;     
+            --bg-card: #363531;     
+            --text-main: #d1ccc3;   
+            --text-muted: #97948b;  
+            --border: #4a4843;      
+            --green: #5e7145;       
+            --blue: #4aa4ff;        
+            --red: #dc2626;         
         }
 
         * { box-sizing: border-box; }
@@ -120,7 +120,6 @@
 </head>
 <body>
 
-    <!-- CHAT LOGIN OVERLAY -->
     <div class="login-overlay" id="loginOverlay">
         <form class="login-card" id="loginForm">
             <h3>Production Dashboard</h3>
@@ -134,7 +133,6 @@
     <div class="header">
         <div class="header-top">
             <div class="header-title-container">
-                <!-- LOGO ADDED HERE -->
                 <img src="/logo.png" alt="Company Logo" class="header-logo" onerror="this.style.display='none'">
                 <h2>Production Dashboard</h2>
             </div>
@@ -157,7 +155,7 @@
         </div>
     </div>
 
-    <!-- MAIN DASHBOARD -->
+    <!-- MAIN DASHBOARD CARDS (UPDATED) -->
     <div class="dashboard">
         <div class="card">
             <h4>Total Stock</h4><span class="percent-text" id="stock-text">0%</span>
@@ -171,6 +169,17 @@
             <h4>Install</h4><span class="percent-text" id="inst-text">0%</span>
             <div class="progress-track"><div id="inst-bar" class="progress-fill"></div></div>
         </div>
+        
+        <!-- NEW CARDS -->
+        <div class="card">
+            <h4>Cutting</h4><span class="percent-text" id="cut-text">0%</span>
+            <div class="progress-track"><div id="cut-bar" class="progress-fill"></div></div>
+        </div>
+        <div class="card">
+            <h4>Bending</h4><span class="percent-text" id="bend-text">0%</span>
+            <div class="progress-track"><div id="bend-bar" class="progress-fill"></div></div>
+        </div>
+
         <div class="card">
             <h4>Completion</h4><span class="percent-text" id="comp-text">0%</span>
             <div class="progress-track"><div id="comp-bar" class="progress-fill"></div></div>
@@ -226,12 +235,10 @@
     </button>
 
     <script>
-        // PWA REGISTRATION
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').catch(error => console.warn('Service worker registration failed:', error));
         }
 
-        // --- DASHBOARD LOGIC ---
         let dashboardData = { totalStock: '0%', trailerList: [] };
         let fleetChart;
 
@@ -240,12 +247,12 @@
             if (isNaN(val)) return '#4a4843';
             if (val < 30) return '#dc2626';
             if (val <= 80) return '#f59e0b';
-            return '#5e7145'; /* Bush green for success */
+            return '#5e7145'; 
         }
 
         function initChart() {
             const ctx = document.getElementById('fleetChart').getContext('2d');
-            Chart.defaults.color = '#97948b'; /* Muted khaki for the chart text */
+            Chart.defaults.color = '#97948b'; 
             fleetChart = new Chart(ctx, {
                 type: 'bar',
                 data: { labels: [], datasets: [{ label: 'Completion %', data: [], backgroundColor: '#5e7145', borderRadius: 4 }] },
@@ -295,8 +302,12 @@
                 bar.style.width = percentage;
                 bar.style.backgroundColor = getTrafficColor(percentage);
             }
+            
+            // Map the new and shifted data points
             setCardData('rec-text', 'rec-bar', selectedTrailer.receiveProgress);
             setCardData('inst-text', 'inst-bar', selectedTrailer.installProgress);
+            setCardData('cut-text', 'cut-bar', selectedTrailer.cuttingProgress);
+            setCardData('bend-text', 'bend-bar', selectedTrailer.bendingProgress);
             setCardData('comp-text', 'comp-bar', selectedTrailer.completionProgress);
         }
 
@@ -308,7 +319,6 @@
             fleetChart.update();
         }
 
-        // --- SCANNER LOGIC ---
         let html5QrcodeScanner; 
         function openScanner() {
             document.getElementById('scanModal').style.display = 'flex';
@@ -330,7 +340,6 @@
             if (html5QrcodeScanner) html5QrcodeScanner.clear();
         }
 
-        // --- QA LOGIC ---
         function openQA() {
             const select = document.getElementById('trailerSelect');
             if (select.selectedIndex === -1 || !dashboardData.trailerList[select.value]) {
@@ -371,7 +380,6 @@
             finally { submitBtn.innerText = originalText; submitBtn.disabled = false; }
         }
 
-        // --- CHAT LOGIC ---
         const socket = io({ autoConnect: false });
         const loginOverlay = document.getElementById('loginOverlay'), loginForm = document.getElementById('loginForm');
         const nameInput = document.getElementById('nameInput'), loginButton = document.getElementById('loginButton'), loginError = document.getElementById('loginError');
@@ -440,7 +448,6 @@
             nameInput.value = localStorage.getItem('production-chat-name') || ''; loginError.textContent = ''; setTimeout(() => nameInput.focus(), 0);
         });
 
-        // Initialize Everything
         initChart();
         fetchTrailers();
         setInterval(fetchTrailers, 5000);
