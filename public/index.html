@@ -174,7 +174,6 @@
         </div>
     </div>
 
-    <!-- MAIN DASHBOARD CARDS -->
     <div class="dashboard">
         <div class="card">
             <h4>Total Stock</h4><span class="percent-text" id="stock-text">0%</span>
@@ -208,7 +207,6 @@
         </div>
     </div>
 
-    <!-- CHECKLIST MODAL (UPDATED TABS) -->
     <div id="checklistModal" class="modal">
         <div class="modal-content">
             <h3><span id="cl-trailer-id" style="color: var(--blue);">M 001</span> Checklists</h3>
@@ -218,17 +216,14 @@
                 <button class="tab-btn" id="tab-cutbend" onclick="switchTab('cutbend')">Cut & Bend</button>
             </div>
             
-            <!-- Receive List -->
             <div id="list-receive" class="checklist-list">
                 <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
             </div>
 
-            <!-- Install List -->
             <div id="list-install" class="checklist-list" style="display: none;">
                 <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
             </div>
 
-            <!-- Cut & Bend List -->
             <div id="list-cutbend" class="checklist-list" style="display: none;">
                 <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
             </div>
@@ -237,7 +232,6 @@
         </div>
     </div>
 
-    <!-- SCANNER MODAL -->
     <div id="scanModal" class="modal">
         <div class="modal-content">
             <h3>Scan Trailer QR</h3>
@@ -246,7 +240,6 @@
         </div>
     </div>
 
-    <!-- QA REPORT MODAL -->
     <div id="qaModal" class="modal">
         <div class="modal-content">
             <h3>Report QA Issue</h3>
@@ -257,7 +250,6 @@
         </div>
     </div>
 
-    <!-- CHAT PANEL -->
     <section class="chat-panel" id="chatPanel" aria-label="Team chat">
         <div class="chat-header">
             <div>
@@ -276,7 +268,6 @@
         </form>
     </section>
 
-    <!-- FLOATING CHAT BUTTON -->
     <button class="chat-toggle" id="chatToggle" type="button" aria-label="Open team chat">
         💬<span class="unread-badge" id="unreadBadge">0</span>
     </button>
@@ -365,12 +356,10 @@
 
         // --- CHECKLIST LOGIC ---
         function switchTab(tabName) {
-            // Hide all tabs and content
             ['receive', 'install', 'cutbend'].forEach(name => {
                 document.getElementById(`tab-${name}`).classList.remove('active');
                 document.getElementById(`list-${name}`).style.display = 'none';
             });
-            // Show selected tab and content
             document.getElementById(`tab-${tabName}`).classList.add('active');
             document.getElementById(`list-${tabName}`).style.display = 'flex';
         }
@@ -398,7 +387,6 @@
                     return;
                 }
 
-                // Render Receive and Install Lists
                 let receiveHTML = '';
                 let installHTML = '';
                 
@@ -416,7 +404,6 @@
                         <input type="checkbox" ${isChecked} onchange="toggleTask('${trailerId}', 'assembly', ${index}, 'D', this)">
                     </div>`;
 
-                    // Sort tasks based on their description
                     if (task.toLowerCase().includes('receive')) {
                         receiveHTML += itemHTML;
                     } else {
@@ -427,7 +414,6 @@
                 document.getElementById('list-receive').innerHTML = receiveHTML || '<div style="color: var(--text-muted); padding: 20px;">No receive tasks found.</div>';
                 document.getElementById('list-install').innerHTML = installHTML || '<div style="color: var(--text-muted); padding: 20px;">No install tasks found.</div>';
 
-                // Render Cut/Bend List
                 let cbHTML = '';
                 data.cutBend.forEach((row, index) => {
                     const subNum = row[0] || 'N/A';
@@ -463,18 +449,23 @@
 
         function closeChecklists() { document.getElementById('checklistModal').style.display = 'none'; }
 
+        // --- UPDATED TOGGLETASK FUNCTION ---
         async function toggleTask(trailerId, type, rowIndex, colString, checkboxEl) {
-            checkboxEl.disabled = true; // Prevent double clicking
+            checkboxEl.disabled = true; 
             const isChecked = checkboxEl.checked;
             
             try {
-                await fetch('/api/update-checklist', {
+                const res = await fetch('/api/update-checklist', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ trailerId, type, row: rowIndex, col: colString, isChecked })
                 });
+                
+                const data = await res.json();
+                if (!data.success) throw new Error("Google blocked the save.");
+
             } catch (err) {
-                alert("Failed to save check! Reverting.");
+                alert("Failed to save check! Make sure the Robot Email is added to the Google Sheet as an Editor.");
                 checkboxEl.checked = !isChecked; // Revert visually
             } finally {
                 checkboxEl.disabled = false;
