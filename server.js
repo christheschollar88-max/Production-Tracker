@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const path = require('path'); 
 const { randomUUID } = require('crypto');
 const { Server } = require('socket.io');
 const { google } = require('googleapis');
@@ -12,7 +13,6 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(cors());
-// CRITICAL: This allows the server to read the QA Report data
 app.use(express.json()); 
 app.use(express.static('public'));
 
@@ -20,7 +20,6 @@ const API_KEY = process.env.GOOGLE_API_KEY;
 const sheets = google.sheets({ version: 'v4', auth: API_KEY });
 const MASTER_SHEET_ID = '1yUkt9j49mT9xGHS0BnaIO488segTr1q0B8TXbS5m7UM';
 
-// Dashboard cache
 let cachedData = {
     totalStock: '0%',
     trailerList: [],
@@ -32,11 +31,13 @@ async function syncWithGoogle() {
         console.log('Fetching fresh data from Google Sheets...');
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: MASTER_SHEET_ID,
-            range: 'Sheet1!A2:G100'
+            // Expanded range to include Column I
+            range: 'Sheet1!A2:I100'
         });
 
         const rows = response.data.values || [];
-        const globalStock = rows.length > 0 && rows[0][6] ? rows[0][6] : '0%';
+        // Total Stock shifted to Column I (index 8)
+        const globalStock = rows.length > 0 && rows[0][8] ? rows[0][8] : '0%';
         
         const trailers = rows
             .map(row => ({
@@ -45,7 +46,9 @@ async function syncWithGoogle() {
                 date: row[2] || '',
                 receiveProgress: row[3] || '0%',
                 installProgress: row[4] || '0%',
-                completionProgress: row[5] || '0%'
+                cuttingProgress: row[5] || '0%',     // NEW: Column F
+                bendingProgress: row[6] || '0%',     // NEW: Column G
+                completionProgress: row[7] || '0%'   // SHIFTED: Column H
             }))
             .filter(trailer => trailer.id !== '');
             
@@ -65,12 +68,22 @@ async function syncWithGoogle() {
 syncWithGoogle();
 setInterval(syncWithGoogle, 120000);
 
-// Endpoint for the frontend to get trailer data
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
+        if (err) {
+            res.sendFile(path.join(__dirname, 'index.html'), (err2) => {
+                if (err2) {
+                    res.status(404).send("Could not find index.html. Ensure index.html is uploaded in your GitHub repository!");
+                }
+            });
+        }
+    });
+});
+
 app.get('/api/trailers', (req, res) => {
     res.json(cachedData);
 });
 
-// Endpoint to receive QA Reports and write them to Google Sheets
 app.post('/api/qa-report', async (req, res) => {
     const { trailerId, issue } = req.body;
     try {
