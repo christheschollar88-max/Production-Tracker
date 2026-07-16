@@ -21,6 +21,7 @@
             --green: #5e7145;       
             --blue: #4aa4ff;        
             --red: #dc2626;         
+            --orange: #b45309;      /* For Sync Button */
         }
 
         * { box-sizing: border-box; }
@@ -40,10 +41,12 @@
         .stock-tiny span { font-size: 16px; color: var(--text-main); }
 
         .header-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-sync { background: var(--orange); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .btn-scan { background: var(--green); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;}
         .btn-check { background: var(--blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;}
         .btn-qa { background: var(--red); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;}
         .header-buttons button:hover { filter: brightness(1.2); }
+        .header-buttons button:disabled { opacity: 0.6; cursor: wait; }
 
         .control-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
         select { background-color: var(--bg-page); color: var(--text-main); border: 1px solid var(--border); padding: 10px 15px; border-radius: 8px; font-size: 16px; outline: none; cursor: pointer; min-width: 250px; }
@@ -141,7 +144,7 @@
             .chat-panel { right: 16px; bottom: 86px; }
             .chat-toggle { right: 16px; bottom: 16px; }
             .header-buttons { justify-content: space-between; width: 100%; }
-            .header-buttons button { flex: 1; }
+            .header-buttons button { flex: 1; padding: 8px; font-size: 12px; }
         }
     </style>
 </head>
@@ -166,6 +169,7 @@
             <div class="header-right">
                 <div class="stock-tiny">Total Stock: <span id="stock-text" style="color: var(--text-main);">0%</span></div>
                 <div class="header-buttons">
+                    <button class="btn-sync" id="syncBtn" onclick="forceSync()">🔄 Sync</button>
                     <button class="btn-scan" onclick="openScanner()">📸 Scan</button>
                     <button class="btn-check" onclick="openChecklists()">📝 Checklists</button>
                     <button class="btn-qa" onclick="openQA()">⚠️ QA</button>
@@ -305,6 +309,27 @@
             return '#5e7145'; 
         }
 
+        // NEW: Function to manually force a sync from the server
+        async function forceSync() {
+            const syncBtn = document.getElementById('syncBtn');
+            const originalText = syncBtn.innerText;
+            
+            syncBtn.innerText = "⏳...";
+            syncBtn.disabled = true;
+
+            try {
+                // Tells server to force grab from Sheets right now
+                await fetch('/api/force-sync');
+                // Pulls that newly grabbed data back down to the UI
+                await fetchTrailers(); 
+            } catch (err) {
+                console.error("Force sync failed", err);
+            } finally {
+                syncBtn.innerText = originalText;
+                syncBtn.disabled = false;
+            }
+        }
+
         async function fetchTrailers() {
             try {
                 const response = await fetch(`/api/trailers?t=${Date.now()}`);
@@ -366,13 +391,11 @@
                 tdStage.innerText = stage;
                 tr.appendChild(tdStage);
 
-                // Part 0 = Box, Part 1 = Attachments
                 [0, 1].forEach((partIndex) => {
                     const td = document.createElement('td');
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     
-                    // Pull live state from the Google Sheet via the Server cache
                     if (partIndex === 0) checkbox.checked = selectedTrailer.matrix.box[stageIndex];
                     if (partIndex === 1) checkbox.checked = selectedTrailer.matrix.attachments[stageIndex];
 
@@ -389,11 +412,10 @@
                             const data = await res.json();
                             if (!data.success) throw new Error("Blocked");
                             
-                            // Immediately fetch new data to refresh screen
                             await fetchTrailers();
                         } catch(e) {
                             alert("Failed to save check! Make sure the Matrix Data sheet exists and has the Trailer ID.");
-                            this.checked = !isChecked; // Revert visually
+                            this.checked = !isChecked; 
                         } finally {
                             this.disabled = false;
                         }
