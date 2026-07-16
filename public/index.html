@@ -60,7 +60,6 @@
         .progress-track { background-color: var(--bg-page); border-radius: 999px; height: 8px; width: 100%; overflow: hidden; border: 1px solid var(--border); }
         .progress-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease; }
 
-        /* Part Tracking Matrix Styles - Adjusted for 2 columns */
         .tracking-table { width: 100%; border-collapse: collapse; min-width: 300px; }
         .tracking-table th, .tracking-table td { padding: 12px 10px; text-align: center; border: 1px solid var(--border); }
         .tracking-table th { background-color: var(--bg-page); color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
@@ -210,7 +209,6 @@
             <div class="progress-track"><div id="comp-bar" class="progress-fill"></div></div>
         </div>
         
-        <!-- UPDATED PART TRACKING MATRIX (Box and Attachments only) -->
         <div class="card matrix-card">
             <h4 style="margin-bottom: 20px;">Component Production Location</h4>
             <table class="tracking-table">
@@ -222,13 +220,11 @@
                     </tr>
                 </thead>
                 <tbody id="tracking-matrix-body">
-                    <!-- Injected via JavaScript -->
-                </tbody>
+                    </tbody>
             </table>
         </div>
     </div>
 
-    <!-- CHECKLIST MODAL -->
     <div id="checklistModal" class="modal">
         <div class="modal-content">
             <h3><span id="cl-trailer-id" style="color: var(--blue);">M 001</span> Checklists</h3>
@@ -254,7 +250,6 @@
         </div>
     </div>
 
-    <!-- SCANNER MODAL -->
     <div id="scanModal" class="modal">
         <div class="modal-content">
             <h3>Scan Trailer QR</h3>
@@ -263,7 +258,6 @@
         </div>
     </div>
 
-    <!-- QA REPORT MODAL -->
     <div id="qaModal" class="modal">
         <div class="modal-content">
             <h3>Report QA Issue</h3>
@@ -274,7 +268,6 @@
         </div>
     </div>
 
-    <!-- CHAT PANEL -->
     <section class="chat-panel" id="chatPanel" aria-label="Team chat">
         <div class="chat-header">
             <div>
@@ -302,11 +295,7 @@
 
         let dashboardData = { totalStock: '0%', trailerList: [] };
         
-        // --- UPDATED MATRIX VARIABLES ---
         const matrixStages = ['Cut & Bend', 'Welding', 'Powder Coating', 'Storage', 'Pre-Assembly', 'Assembly', 'QC'];
-        const matrixParts = ['box', 'attachments'];
-        
-        let matrixLocalState = JSON.parse(localStorage.getItem('metalian-matrix-state')) || {};
 
         function getTrafficColor(percentString) {
             const val = parseFloat(String(percentString).replace('%', ''));
@@ -368,9 +357,8 @@
             const tbody = document.getElementById('tracking-matrix-body');
             tbody.innerHTML = '';
 
-            if(!matrixLocalState[trailerId]) {
-                matrixLocalState[trailerId] = {};
-            }
+            const selectedTrailer = dashboardData.trailerList.find(t => t.id === trailerId);
+            if(!selectedTrailer || !selectedTrailer.matrix) return;
 
             matrixStages.forEach((stage, stageIndex) => {
                 const tr = document.createElement('tr');
@@ -378,18 +366,37 @@
                 tdStage.innerText = stage;
                 tr.appendChild(tdStage);
 
-                matrixParts.forEach((part, partIndex) => {
+                // Part 0 = Box, Part 1 = Attachments
+                [0, 1].forEach((partIndex) => {
                     const td = document.createElement('td');
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     
-                    const checkKey = `${stageIndex}-${partIndex}`;
-                    
-                    checkbox.checked = matrixLocalState[trailerId][checkKey] || false;
+                    // Pull live state from the Google Sheet via the Server cache
+                    if (partIndex === 0) checkbox.checked = selectedTrailer.matrix.box[stageIndex];
+                    if (partIndex === 1) checkbox.checked = selectedTrailer.matrix.attachments[stageIndex];
 
-                    checkbox.onchange = function() {
-                        matrixLocalState[trailerId][checkKey] = this.checked;
-                        localStorage.setItem('metalian-matrix-state', JSON.stringify(matrixLocalState));
+                    checkbox.onchange = async function() {
+                        this.disabled = true;
+                        const isChecked = this.checked;
+                        
+                        try {
+                            const res = await fetch('/api/update-matrix', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ trailerId, stageIndex, partIndex, isChecked })
+                            });
+                            const data = await res.json();
+                            if (!data.success) throw new Error("Blocked");
+                            
+                            // Immediately fetch new data to refresh screen
+                            await fetchTrailers();
+                        } catch(e) {
+                            alert("Failed to save check! Make sure the Matrix Data sheet exists and has the Trailer ID.");
+                            this.checked = !isChecked; // Revert visually
+                        } finally {
+                            this.disabled = false;
+                        }
                     };
 
                     td.appendChild(checkbox);
