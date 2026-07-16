@@ -60,12 +60,12 @@
         .progress-track { background-color: var(--bg-page); border-radius: 999px; height: 8px; width: 100%; overflow: hidden; border: 1px solid var(--border); }
         .progress-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease; }
 
-        /* Part Tracking Matrix Styles */
-        .tracking-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        /* Part Tracking Matrix Styles - Adjusted for 2 columns */
+        .tracking-table { width: 100%; border-collapse: collapse; min-width: 300px; }
         .tracking-table th, .tracking-table td { padding: 12px 10px; text-align: center; border: 1px solid var(--border); }
         .tracking-table th { background-color: var(--bg-page); color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .tracking-table td:first-child { text-align: left; font-weight: 600; color: var(--text-main); background-color: rgba(0,0,0,0.1); width: 160px; }
-        .tracking-table input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--green); }
+        .tracking-table td:first-child { text-align: left; font-weight: 600; color: var(--text-main); background-color: rgba(0,0,0,0.1); width: 140px; }
+        .tracking-table input[type="checkbox"] { width: 24px; height: 24px; cursor: pointer; accent-color: var(--green); }
         .tracking-table tr:hover td { background-color: rgba(94, 113, 69, 0.1); }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 3000; }
@@ -210,7 +210,7 @@
             <div class="progress-track"><div id="comp-bar" class="progress-fill"></div></div>
         </div>
         
-        <!-- NEW PART TRACKING MATRIX (Replaces Fleet Chart) -->
+        <!-- UPDATED PART TRACKING MATRIX (Box and Attachments only) -->
         <div class="card matrix-card">
             <h4 style="margin-bottom: 20px;">Component Production Location</h4>
             <table class="tracking-table">
@@ -218,9 +218,6 @@
                     <tr>
                         <th>Stage</th>
                         <th>Box</th>
-                        <th>Chassis</th>
-                        <th>Doors</th>
-                        <th>Nosecone</th>
                         <th>Attachments</th>
                     </tr>
                 </thead>
@@ -305,11 +302,10 @@
 
         let dashboardData = { totalStock: '0%', trailerList: [] };
         
-        // Matrix Setup
+        // --- UPDATED MATRIX VARIABLES ---
         const matrixStages = ['Cut & Bend', 'Welding', 'Powder Coating', 'Storage', 'Pre-Assembly', 'Assembly', 'QC'];
-        const matrixParts = ['box', 'chassis', 'doors', 'nosecone', 'attachments'];
+        const matrixParts = ['box', 'attachments'];
         
-        // Temporary local storage for matrix ticks (until backend Google Sheets sync is added for this specific feature)
         let matrixLocalState = JSON.parse(localStorage.getItem('metalian-matrix-state')) || {};
 
         function getTrafficColor(percentString) {
@@ -372,7 +368,6 @@
             const tbody = document.getElementById('tracking-matrix-body');
             tbody.innerHTML = '';
 
-            // Ensure state exists for this trailer locally
             if(!matrixLocalState[trailerId]) {
                 matrixLocalState[trailerId] = {};
             }
@@ -388,13 +383,10 @@
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     
-                    // Generate a unique key for this specific checkbox
                     const checkKey = `${stageIndex}-${partIndex}`;
                     
-                    // Restore visual state from local memory
                     checkbox.checked = matrixLocalState[trailerId][checkKey] || false;
 
-                    // Handle Click
                     checkbox.onchange = function() {
                         matrixLocalState[trailerId][checkKey] = this.checked;
                         localStorage.setItem('metalian-matrix-state', JSON.stringify(matrixLocalState));
