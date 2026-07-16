@@ -8,7 +8,6 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#2b2a26">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="/socket.io/socket.io.js"></script>
 
@@ -37,9 +36,8 @@
         
         .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         
-        /* New Small Stock Indicator */
         .stock-tiny { font-size: 13px; color: var(--text-muted); background: var(--bg-card); padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-weight: bold; }
-        .stock-tiny span { font-size: 16px; }
+        .stock-tiny span { font-size: 16px; color: var(--text-main); }
 
         .header-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-scan { background: var(--green); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;}
@@ -56,11 +54,19 @@
 
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; width: 100%; max-width: 1000px; margin-top: 10px; }
         .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 25px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; }
-        .chart-card { grid-column: 1 / -1; padding: 30px; }
+        .matrix-card { grid-column: 1 / -1; padding: 25px; overflow-x: auto; }
         .card h4 { margin: 0 0 15px; color: var(--text-muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: bold; }
         .percent-text { font-size: 36px; font-weight: 700; margin-bottom: 20px; }
         .progress-track { background-color: var(--bg-page); border-radius: 999px; height: 8px; width: 100%; overflow: hidden; border: 1px solid var(--border); }
         .progress-fill { height: 100%; width: 0%; border-radius: 999px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease; }
+
+        /* Part Tracking Matrix Styles */
+        .tracking-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .tracking-table th, .tracking-table td { padding: 12px 10px; text-align: center; border: 1px solid var(--border); }
+        .tracking-table th { background-color: var(--bg-page); color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .tracking-table td:first-child { text-align: left; font-weight: 600; color: var(--text-main); background-color: rgba(0,0,0,0.1); width: 160px; }
+        .tracking-table input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--green); }
+        .tracking-table tr:hover td { background-color: rgba(94, 113, 69, 0.1); }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 3000; }
         .modal-content { background: var(--bg-card); padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6); }
@@ -159,7 +165,7 @@
                 <h2>Dashboard</h2>
             </div>
             <div class="header-right">
-                <div class="stock-tiny">Total Stock: <span id="stock-text">0%</span></div>
+                <div class="stock-tiny">Total Stock: <span id="stock-text" style="color: var(--text-main);">0%</span></div>
                 <div class="header-buttons">
                     <button class="btn-scan" onclick="openScanner()">📸 Scan</button>
                     <button class="btn-check" onclick="openChecklists()">📝 Checklists</button>
@@ -203,12 +209,29 @@
             <h4>Completion</h4><span class="percent-text" id="comp-text">0%</span>
             <div class="progress-track"><div id="comp-bar" class="progress-fill"></div></div>
         </div>
-        <div class="card chart-card">
-            <h4 style="margin-bottom: 20px;">Fleet Completion Status</h4>
-            <canvas id="fleetChart" height="80"></canvas>
+        
+        <!-- NEW PART TRACKING MATRIX (Replaces Fleet Chart) -->
+        <div class="card matrix-card">
+            <h4 style="margin-bottom: 20px;">Component Production Location</h4>
+            <table class="tracking-table">
+                <thead>
+                    <tr>
+                        <th>Stage</th>
+                        <th>Box</th>
+                        <th>Chassis</th>
+                        <th>Doors</th>
+                        <th>Nosecone</th>
+                        <th>Attachments</th>
+                    </tr>
+                </thead>
+                <tbody id="tracking-matrix-body">
+                    <!-- Injected via JavaScript -->
+                </tbody>
+            </table>
         </div>
     </div>
 
+    <!-- CHECKLIST MODAL -->
     <div id="checklistModal" class="modal">
         <div class="modal-content">
             <h3><span id="cl-trailer-id" style="color: var(--blue);">M 001</span> Checklists</h3>
@@ -234,6 +257,7 @@
         </div>
     </div>
 
+    <!-- SCANNER MODAL -->
     <div id="scanModal" class="modal">
         <div class="modal-content">
             <h3>Scan Trailer QR</h3>
@@ -242,6 +266,7 @@
         </div>
     </div>
 
+    <!-- QA REPORT MODAL -->
     <div id="qaModal" class="modal">
         <div class="modal-content">
             <h3>Report QA Issue</h3>
@@ -252,6 +277,7 @@
         </div>
     </div>
 
+    <!-- CHAT PANEL -->
     <section class="chat-panel" id="chatPanel" aria-label="Team chat">
         <div class="chat-header">
             <div>
@@ -277,9 +303,14 @@
     <script>
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(e => console.warn(e)); }
 
-        // --- DASHBOARD LOGIC ---
         let dashboardData = { totalStock: '0%', trailerList: [] };
-        let fleetChart;
+        
+        // Matrix Setup
+        const matrixStages = ['Cut & Bend', 'Welding', 'Powder Coating', 'Storage', 'Pre-Assembly', 'Assembly', 'QC'];
+        const matrixParts = ['box', 'chassis', 'doors', 'nosecone', 'attachments'];
+        
+        // Temporary local storage for matrix ticks (until backend Google Sheets sync is added for this specific feature)
+        let matrixLocalState = JSON.parse(localStorage.getItem('metalian-matrix-state')) || {};
 
         function getTrafficColor(percentString) {
             const val = parseFloat(String(percentString).replace('%', ''));
@@ -289,19 +320,8 @@
             return '#5e7145'; 
         }
 
-        function initChart() {
-            const ctx = document.getElementById('fleetChart').getContext('2d');
-            Chart.defaults.color = '#97948b'; 
-            fleetChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: [], datasets: [{ label: 'Completion %', data: [], backgroundColor: '#5e7145', borderRadius: 4 }] },
-                options: { responsive: true, scales: { y: { beginAtZero: true, max: 100, grid: { color: '#4a4843' } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
-            });
-        }
-
         async function fetchTrailers() {
             try {
-                // Cache buster
                 const response = await fetch(`/api/trailers?t=${Date.now()}`);
                 if (!response.ok) throw new Error('Fetch failed');
 
@@ -320,13 +340,9 @@
                     select.add(option);
                 });
 
-                // Total Stock is now just text, no bar
-                const stockEl = document.getElementById('stock-text');
-                stockEl.innerText = dashboardData.totalStock;
-                stockEl.style.color = getTrafficColor(dashboardData.totalStock);
+                document.getElementById('stock-text').innerText = dashboardData.totalStock;
 
                 updateDashboard();
-                updateChart();
             } catch (error) { console.error('Failed to load data', error); }
         }
 
@@ -348,14 +364,47 @@
             setCardData('cut-text', 'cut-bar', selectedTrailer.cuttingProgress);
             setCardData('bend-text', 'bend-bar', selectedTrailer.bendingProgress);
             setCardData('comp-text', 'comp-bar', selectedTrailer.completionProgress);
+
+            buildMatrix(selectedTrailer.id);
         }
 
-        function updateChart() {
-            if (!fleetChart) return;
-            fleetChart.data.labels = dashboardData.trailerList.map(trailer => trailer.id);
-            fleetChart.data.datasets[0].data = dashboardData.trailerList.map(trailer => ( parseFloat(String(trailer.completionProgress).replace('%', '')) || 0 ));
-            fleetChart.data.datasets[0].backgroundColor = dashboardData.trailerList.map(trailer => ( getTrafficColor(trailer.completionProgress) ));
-            fleetChart.update();
+        function buildMatrix(trailerId) {
+            const tbody = document.getElementById('tracking-matrix-body');
+            tbody.innerHTML = '';
+
+            // Ensure state exists for this trailer locally
+            if(!matrixLocalState[trailerId]) {
+                matrixLocalState[trailerId] = {};
+            }
+
+            matrixStages.forEach((stage, stageIndex) => {
+                const tr = document.createElement('tr');
+                const tdStage = document.createElement('td');
+                tdStage.innerText = stage;
+                tr.appendChild(tdStage);
+
+                matrixParts.forEach((part, partIndex) => {
+                    const td = document.createElement('td');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    
+                    // Generate a unique key for this specific checkbox
+                    const checkKey = `${stageIndex}-${partIndex}`;
+                    
+                    // Restore visual state from local memory
+                    checkbox.checked = matrixLocalState[trailerId][checkKey] || false;
+
+                    // Handle Click
+                    checkbox.onchange = function() {
+                        matrixLocalState[trailerId][checkKey] = this.checked;
+                        localStorage.setItem('metalian-matrix-state', JSON.stringify(matrixLocalState));
+                    };
+
+                    td.appendChild(checkbox);
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
         }
 
         // --- CHECKLIST LOGIC ---
@@ -408,11 +457,8 @@
                         <input type="checkbox" ${isChecked} onchange="toggleTask('${trailerId}', 'assembly', ${index}, 'D', this)">
                     </div>`;
 
-                    if (task.toLowerCase().includes('receive')) {
-                        receiveHTML += itemHTML;
-                    } else {
-                        installHTML += itemHTML;
-                    }
+                    if (task.toLowerCase().includes('receive')) { receiveHTML += itemHTML; } 
+                    else { installHTML += itemHTML; }
                 });
                 
                 document.getElementById('list-receive').innerHTML = receiveHTML || '<div style="color: var(--text-muted); padding: 20px;">No receive tasks found.</div>';
@@ -456,29 +502,22 @@
         async function toggleTask(trailerId, type, rowIndex, colString, checkboxEl) {
             checkboxEl.disabled = true; 
             const isChecked = checkboxEl.checked;
-            
             try {
                 const res = await fetch('/api/update-checklist', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ trailerId, type, row: rowIndex, col: colString, isChecked })
                 });
-                
                 const data = await res.json();
                 if (!data.success) throw new Error("Google blocked the save.");
-
-                // Immediate force refresh
                 await fetchTrailers();
-
             } catch (err) {
                 alert("Failed to save check! Make sure the Robot Email is added to the Google Sheet as an Editor.");
-                checkboxEl.checked = !isChecked; // Revert visually
-            } finally {
-                checkboxEl.disabled = false;
-            }
+                checkboxEl.checked = !isChecked; 
+            } finally { checkboxEl.disabled = false; }
         }
 
-        // --- SCANNER LOGIC ---
+        // --- SCANNER & QA LOGIC ---
         let html5QrcodeScanner; 
         function openScanner() {
             document.getElementById('scanModal').style.display = 'flex';
@@ -493,17 +532,11 @@
                 } else { alert(`Trailer ID "${decodedText}" not found in system.`); }
             });
         }
-        function closeScanner() {
-            document.getElementById('scanModal').style.display = 'none';
-            if (html5QrcodeScanner) html5QrcodeScanner.clear();
-        }
+        function closeScanner() { document.getElementById('scanModal').style.display = 'none'; if (html5QrcodeScanner) html5QrcodeScanner.clear(); }
 
-        // --- QA LOGIC ---
         function openQA() {
             const select = document.getElementById('trailerSelect');
-            if (select.selectedIndex === -1 || !dashboardData.trailerList[select.value]) {
-                alert("Please select a trailer from the dropdown first!"); return;
-            }
+            if (select.selectedIndex === -1 || !dashboardData.trailerList[select.value]) { alert("Please select a trailer from the dropdown first!"); return; }
             document.getElementById('qa-trailer-id').innerText = dashboardData.trailerList[select.value].id;
             document.getElementById('qaModal').style.display = 'flex';
         }
@@ -570,7 +603,7 @@
         closeChatButton.addEventListener('click', closeChat);
         changeUserButton.addEventListener('click', () => { socket.disconnect(); currentUser = ''; requestedName = ''; loginOverlay.classList.remove('hidden'); nameInput.value = localStorage.getItem('production-chat-name') || ''; loginError.textContent = ''; setTimeout(() => nameInput.focus(), 0); });
 
-        initChart(); fetchTrailers(); setInterval(fetchTrailers, 5000); setTimeout(() => nameInput.focus(), 0);
+        fetchTrailers(); setInterval(fetchTrailers, 5000); setTimeout(() => nameInput.focus(), 0);
     </script>
 </body>
 </html>
