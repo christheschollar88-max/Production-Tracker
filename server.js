@@ -33,13 +33,11 @@ let cachedData = { totalStock: '0%', trailerList: [], lastUpdated: 'Waiting for 
 
 async function syncWithGoogle() {
     try {
-        // Fetch Master Sheet (Dashboard Data)
         const masterRes = await sheets.spreadsheets.values.get({
             spreadsheetId: MASTER_SHEET_ID,
             range: 'Sheet1!A2:I100'
         });
         
-        // Fetch Matrix Sheet (Live Tracking Data)
         const matrixRes = await sheets.spreadsheets.values.get({
             spreadsheetId: ASSEMBLY_SHEET_ID,
             range: "'Matrix Data'!A2:O1000"
@@ -52,8 +50,6 @@ async function syncWithGoogle() {
         
         const trailers = masterRows.map(row => {
             const id = row[0] || '';
-            
-            // Find matrix data specifically for this trailer
             const matrixRow = matrixRows.find(mRow => mRow[0] === id) || [];
             const matrixState = { box: Array(7).fill(false), attachments: Array(7).fill(false) };
             
@@ -69,7 +65,7 @@ async function syncWithGoogle() {
                 receiveProgress: row[3] || '0%', installProgress: row[4] || '0%',
                 cuttingProgress: row[5] || '0%', bendingProgress: row[6] || '0%',
                 completionProgress: row[7] || '0%',
-                matrix: matrixState // Attach live matrix data here
+                matrix: matrixState 
             };
         }).filter(trailer => trailer.id !== '');
 
@@ -82,7 +78,12 @@ syncWithGoogle(); setInterval(syncWithGoogle, 120000);
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => { if (err) res.sendFile(path.join(__dirname, 'index.html')); }); });
 app.get('/api/trailers', (req, res) => { res.json(cachedData); });
 
-// Endpoint for standard checklists
+// NEW: Manual Force Sync Endpoint
+app.get('/api/force-sync', async (req, res) => {
+    await syncWithGoogle();
+    res.json({ success: true });
+});
+
 app.get('/api/checklists/:trailerId', async (req, res) => {
     const trailerId = req.params.trailerId;
     try {
@@ -92,7 +93,6 @@ app.get('/api/checklists/:trailerId', async (req, res) => {
     } catch (error) { res.json({ success: false, error: 'Tabs not found or error loading data.' }); }
 });
 
-// Endpoint to update standard checklists
 app.post('/api/update-checklist', async (req, res) => {
     const { trailerId, type, row, col, isChecked } = req.body;
     let range = type === 'assembly' ? `'${trailerId}'!${col}${row + 7}` : `'${trailerId} Cutting & Bending'!${col}${row + 8}`;
@@ -106,19 +106,16 @@ app.post('/api/update-checklist', async (req, res) => {
     } catch (error) { res.status(500).json({ success: false }); }
 });
 
-// NEW: Endpoint to update the Matrix Data tab
 app.post('/api/update-matrix', async (req, res) => {
     const { trailerId, stageIndex, partIndex, isChecked } = req.body;
     try {
-        // Find which row the trailer is on in the Matrix Data sheet
         const idsRes = await sheets.spreadsheets.values.get({ spreadsheetId: ASSEMBLY_SHEET_ID, range: "'Matrix Data'!A:A" });
         const ids = idsRes.data.values ? idsRes.data.values.map(row => row[0]) : [];
         const rowIndex = ids.indexOf(trailerId);
         
         if (rowIndex === -1) return res.json({ success: false, error: 'Trailer not found in Matrix Data sheet.' });
-        const rowNum = rowIndex + 1; // Google Sheets row numbers start at 1
+        const rowNum = rowIndex + 1; 
         
-        // Calculate the exact column letter (Box = B through H, Attachments = I through O)
         const asciiCode = partIndex === 0 ? (66 + stageIndex) : (73 + stageIndex);
         const colLetter = String.fromCharCode(asciiCode);
         
@@ -129,7 +126,7 @@ app.post('/api/update-matrix', async (req, res) => {
             requestBody: { values: [[isChecked]] }
         });
         
-        setTimeout(syncWithGoogle, 1500); // Force sync
+        setTimeout(syncWithGoogle, 1500); 
         res.json({ success: true });
     } catch (error) {
         console.error('Matrix Write Error:', error.message);
@@ -148,7 +145,6 @@ app.post('/api/qa-report', async (req, res) => {
     } catch (error) { res.status(500).json({ success: false }); }
 });
 
-// Live Chat Engine
 const chatHistory = [];
 io.on('connection', socket => {
     socket.on('join-chat', (rawName, reply) => {
