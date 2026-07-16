@@ -31,14 +31,20 @@
         .header { width: 100%; max-width: 1000px; margin-bottom: 30px; }
         .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; }
         
-        .header-title-container { display: flex; align-items: center; gap: 15px; }
-        .header-logo { height: 50px; max-width: 150px; object-fit: contain; border-radius: 4px; }
-        .header h2 { margin: 0; font-size: 32px; font-weight: 600; letter-spacing: -0.5px; color: var(--text-main); }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .header-logo { height: 45px; max-width: 150px; object-fit: contain; border-radius: 4px; }
+        .header h2 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.5px; color: var(--text-main); }
         
-        .header-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn-scan { background: var(--green); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-check { background: var(--blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-qa { background: var(--red); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        
+        /* New Small Stock Indicator */
+        .stock-tiny { font-size: 13px; color: var(--text-muted); background: var(--bg-card); padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .stock-tiny span { font-size: 16px; }
+
+        .header-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-scan { background: var(--green); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;}
+        .btn-check { background: var(--blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;}
+        .btn-qa { background: var(--red); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px;}
         .header-buttons button:hover { filter: brightness(1.2); }
 
         .control-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
@@ -121,8 +127,10 @@
         .message-form input:focus { border-color: var(--green); }
         .send-button { padding: 0 16px; border: 0; border-radius: 9px; color: white; background: var(--green); font-weight: 700; cursor: pointer; }
 
-        @media (max-width: 650px) {
+        @media (max-width: 750px) {
             body { padding: 24px 14px; }
+            .header-top { flex-direction: column; align-items: flex-start; }
+            .header-right { width: 100%; justify-content: space-between; }
             .control-panel { align-items: stretch; flex-direction: column; gap: 15px; }
             select { width: 100%; min-width: 0; margin-top: 7px; }
             .chat-panel { right: 16px; bottom: 86px; }
@@ -146,14 +154,17 @@
 
     <div class="header">
         <div class="header-top">
-            <div class="header-title-container">
+            <div class="header-left">
                 <img src="/logo.png" alt="Company Logo" class="header-logo" onerror="this.style.display='none'">
-                <h2>Production Dashboard</h2>
+                <h2>Dashboard</h2>
             </div>
-            <div class="header-buttons">
-                <button class="btn-scan" onclick="openScanner()">📸 Scan</button>
-                <button class="btn-check" onclick="openChecklists()">📝 Checklists</button>
-                <button class="btn-qa" onclick="openQA()">⚠️ QA Report</button>
+            <div class="header-right">
+                <div class="stock-tiny">Total Stock: <span id="stock-text">0%</span></div>
+                <div class="header-buttons">
+                    <button class="btn-scan" onclick="openScanner()">📸 Scan</button>
+                    <button class="btn-check" onclick="openChecklists()">📝 Checklists</button>
+                    <button class="btn-qa" onclick="openQA()">⚠️ QA</button>
+                </div>
             </div>
         </div>
         <div class="control-panel">
@@ -172,8 +183,12 @@
 
     <div class="dashboard">
         <div class="card">
-            <h4>Total Stock</h4><span class="percent-text" id="stock-text">0%</span>
-            <div class="progress-track"><div id="stock-bar" class="progress-fill"></div></div>
+            <h4>Cutting</h4><span class="percent-text" id="cut-text">0%</span>
+            <div class="progress-track"><div id="cut-bar" class="progress-fill"></div></div>
+        </div>
+        <div class="card">
+            <h4>Bending</h4><span class="percent-text" id="bend-text">0%</span>
+            <div class="progress-track"><div id="bend-bar" class="progress-fill"></div></div>
         </div>
         <div class="card">
             <h4>Receive</h4><span class="percent-text" id="rec-text">0%</span>
@@ -183,17 +198,8 @@
             <h4>Install</h4><span class="percent-text" id="inst-text">0%</span>
             <div class="progress-track"><div id="inst-bar" class="progress-fill"></div></div>
         </div>
-        
-        <div class="card">
-            <h4>Cutting</h4><span class="percent-text" id="cut-text">0%</span>
-            <div class="progress-track"><div id="cut-bar" class="progress-fill"></div></div>
-        </div>
-        <div class="card">
-            <h4>Bending</h4><span class="percent-text" id="bend-text">0%</span>
-            <div class="progress-track"><div id="bend-bar" class="progress-fill"></div></div>
-        </div>
 
-        <div class="card">
+        <div class="card" style="grid-column: 1 / -1;">
             <h4>Completion</h4><span class="percent-text" id="comp-text">0%</span>
             <div class="progress-track"><div id="comp-bar" class="progress-fill"></div></div>
         </div>
@@ -295,7 +301,7 @@
 
         async function fetchTrailers() {
             try {
-                // NEW: Cache buster ?t=${Date.now()} added here
+                // Cache buster
                 const response = await fetch(`/api/trailers?t=${Date.now()}`);
                 if (!response.ok) throw new Error('Fetch failed');
 
@@ -314,9 +320,10 @@
                     select.add(option);
                 });
 
-                document.getElementById('stock-text').innerText = dashboardData.totalStock;
-                document.getElementById('stock-bar').style.width = dashboardData.totalStock;
-                document.getElementById('stock-bar').style.backgroundColor = getTrafficColor(dashboardData.totalStock);
+                // Total Stock is now just text, no bar
+                const stockEl = document.getElementById('stock-text');
+                stockEl.innerText = dashboardData.totalStock;
+                stockEl.style.color = getTrafficColor(dashboardData.totalStock);
 
                 updateDashboard();
                 updateChart();
@@ -375,7 +382,6 @@
             document.getElementById('list-cutbend').innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">Fetching live list...</div>';
 
             try {
-                // NEW: Cache buster ?t=${Date.now()} added here
                 const res = await fetch(`/api/checklists/${trailerId}?t=${Date.now()}`);
                 const data = await res.json();
                 
@@ -460,6 +466,9 @@
                 
                 const data = await res.json();
                 if (!data.success) throw new Error("Google blocked the save.");
+
+                // Immediate force refresh
+                await fetchTrailers();
 
             } catch (err) {
                 alert("Failed to save check! Make sure the Robot Email is added to the Google Sheet as an Editor.");
