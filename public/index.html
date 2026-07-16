@@ -21,7 +21,7 @@
             --green: #5e7145;       
             --blue: #4aa4ff;        
             --red: #dc2626;         
-            --orange: #b45309;      /* For Sync Button */
+            --orange: #b45309;      
         }
 
         * { box-sizing: border-box; }
@@ -309,7 +309,6 @@
             return '#5e7145'; 
         }
 
-        // NEW: Function to manually force a sync from the server
         async function forceSync() {
             const syncBtn = document.getElementById('syncBtn');
             const originalText = syncBtn.innerText;
@@ -318,9 +317,7 @@
             syncBtn.disabled = true;
 
             try {
-                // Tells server to force grab from Sheets right now
                 await fetch('/api/force-sync');
-                // Pulls that newly grabbed data back down to the UI
                 await fetchTrailers(); 
             } catch (err) {
                 console.error("Force sync failed", err);
@@ -489,8 +486,10 @@
                 data.cutBend.forEach((row, index) => {
                     const subNum = row[0] || 'N/A';
                     const group = row[1] || 'No Group';
-                    const isBended = (row[2] === 'TRUE' || row[2] === 'true') ? 'checked' : '';
-                    const isCut = (row[3] === 'TRUE' || row[3] === 'true') ? 'checked' : '';
+                    
+                    // FIXED: Swapped 'isCut' to 'D' and 'isBended' to 'E'
+                    const isCut = (row[2] === 'TRUE' || row[2] === 'true') ? 'checked' : '';
+                    const isBended = (row[3] === 'TRUE' || row[3] === 'true') ? 'checked' : '';
 
                     cbHTML += `
                     <div class="checklist-item">
@@ -500,12 +499,12 @@
                         </div>
                         <div class="checkbox-container">
                             <div class="check-group">
-                                <label>BEND</label>
-                                <input type="checkbox" ${isBended} onchange="toggleTask('${trailerId}', 'cutbend', ${index}, 'D', this)">
+                                <label>CUT</label>
+                                <input type="checkbox" ${isCut} onchange="toggleTask('${trailerId}', 'cutbend', ${index}, 'D', this)">
                             </div>
                             <div class="check-group">
-                                <label>CUT</label>
-                                <input type="checkbox" ${isCut} onchange="toggleTask('${trailerId}', 'cutbend', ${index}, 'E', this)">
+                                <label>BEND</label>
+                                <input type="checkbox" ${isBended} onchange="toggleTask('${trailerId}', 'cutbend', ${index}, 'E', this)">
                             </div>
                         </div>
                     </div>`;
