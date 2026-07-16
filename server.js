@@ -12,10 +12,6 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(cors());
-app.use(express.json()); 
-app.use(express.static('public'));
-
 // Robot Editor Authentication
 const auth = new google.auth.GoogleAuth({
     credentials: {
@@ -29,19 +25,26 @@ const sheets = google.sheets({ version: 'v4', auth });
 const MASTER_SHEET_ID = '1yUkt9j49mT9xGHS0BnaIO488segTr1q0B8TXbS5m7UM';
 const ASSEMBLY_SHEET_ID = '1SgB5QG9jeCtJeD2UaaKsyrtwPCtd4qfcTyKgFf5az3Y';
 
-let cachedData = { totalStock: '0%', trailerList: [], lastUpdated: 'Waiting for sync...' };
+let cachedData = { totalStock: '0%', trailerList: [], qaList: [], lastUpdated: 'Waiting for sync...' };
 
 async function syncWithGoogle() {
     try {
-        const masterRes = await sheets.spreadsheets.values.get({
-            spreadsheetId: MASTER_SHEET_ID,
-            range: 'Sheet1!A2:I100'
-        });
+        const masterRes = await sheets.spreadsheets.values.get({ spreadsheetId: MASTER_SHEET_ID, range: 'Sheet1!A2:I100' });
+        const matrixRes = await sheets.spreadsheets.values.get({ spreadsheetId: ASSEMBLY_SHEET_ID, range: "'Matrix Data'!A2:O1000" });
         
-        const matrixRes = await sheets.spreadsheets.values.get({
-            spreadsheetId: ASSEMBLY_SHEET_ID,
-            range: "'Matrix Data'!A2:O1000"
-        });
+        // NEW: Fetch QA Issues
+        let qaIssuesList = [];
+        try {
+            const qaRes = await sheets.spreadsheets.values.get({ spreadsheetId: MASTER_SHEET_ID, range: "'QA Issues'!A2:C1000" });
+            if (qaRes.data.values) {
+                // Map the data and reverse it so the newest issues appear at the top
+                qaIssuesList = qaRes.data.values.map(row => ({
+                    date: row[0] || '',
+                    trailer: row[1] || '',
+                    issue: row[2] || ''
+                })).reverse();
+            }
+        } catch (qaErr) { console.warn("Could not fetch QA Issues. Sheet might be empty."); }
 
         const masterRows = masterRes.data.values || [];
         const matrixRows = matrixRes.data.values || [];
@@ -69,16 +72,24 @@ async function syncWithGoogle() {
             };
         }).filter(trailer => trailer.id !== '');
 
-        cachedData = { totalStock: globalStock, trailerList: trailers, lastUpdated: new Date().toLocaleTimeString('en-ZA', { timeZone: 'Africa/Johannesburg' }) };
+        cachedData = { 
+            totalStock: globalStock, 
+            trailerList: trailers, 
+            qaList: qaIssuesList, // Inject QA Data here
+            lastUpdated: new Date().toLocaleTimeString('en-ZA', { timeZone: 'Africa/Johannesburg' }) 
+        };
     } catch (error) { console.error('Sync Error:', error.message); }
 }
 
 syncWithGoogle(); setInterval(syncWithGoogle, 120000);
 
+app.use(cors());
+app.use(express.json()); 
+app.use(express.static('public'));
+
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => { if (err) res.sendFile(path.join(__dirname, 'index.html')); }); });
 app.get('/api/trailers', (req, res) => { res.json(cachedData); });
 
-// NEW: Manual Force Sync Endpoint
 app.get('/api/force-sync', async (req, res) => {
     await syncWithGoogle();
     res.json({ success: true });
@@ -115,7 +126,6 @@ app.post('/api/update-matrix', async (req, res) => {
         
         if (rowIndex === -1) return res.json({ success: false, error: 'Trailer not found in Matrix Data sheet.' });
         const rowNum = rowIndex + 1; 
-        
         const asciiCode = partIndex === 0 ? (66 + stageIndex) : (73 + stageIndex);
         const colLetter = String.fromCharCode(asciiCode);
         
@@ -128,10 +138,7 @@ app.post('/api/update-matrix', async (req, res) => {
         
         setTimeout(syncWithGoogle, 1500); 
         res.json({ success: true });
-    } catch (error) {
-        console.error('Matrix Write Error:', error.message);
-        res.status(500).json({ success: false });
-    }
+    } catch (error) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/qa-report', async (req, res) => {
@@ -141,6 +148,7 @@ app.post('/api/qa-report', async (req, res) => {
             spreadsheetId: MASTER_SHEET_ID, range: "'QA Issues'!A:C", valueInputOption: "USER_ENTERED",
             requestBody: { values: [[new Date().toLocaleString('en-ZA'), trailerId, issue]] }
         });
+        setTimeout(syncWithGoogle, 1500); // Fetch the new issue down to the UI
         res.json({ success: true });
     } catch (error) { res.status(500).json({ success: false }); }
 });
