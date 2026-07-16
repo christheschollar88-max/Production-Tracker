@@ -71,16 +71,17 @@
         .tracking-table tr:hover td { background-color: rgba(94, 113, 69, 0.1); }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 3000; }
-        .modal-content { background: var(--bg-card); padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6); }
+        .modal-content { background: var(--bg-card); padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column;}
         .modal-content h3 { margin-top: 0; margin-bottom: 15px; font-size: 22px; color: var(--text-main); }
         
         .modal-textarea { width: 100%; height: 100px; background: var(--bg-page); color: var(--text-main); border: 1px solid var(--border); padding: 12px; border-radius: 9px; margin-top: 10px; resize: vertical; outline: none; }
         .modal-textarea:focus { border-color: var(--green); }
-        .close-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border); margin-top: 15px; width: 100%; padding: 12px; border-radius: 9px; cursor: pointer; font-weight: bold; }
+        .close-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border); margin-top: 15px; width: 100%; padding: 12px; border-radius: 9px; cursor: pointer; font-weight: bold; flex-shrink: 0; }
         .close-btn:hover { background: var(--border); }
         #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
 
-        .checklist-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        /* Generic Tab Styles for Modals */
+        .modal-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; flex-shrink: 0;}
         .tab-btn { flex: 1; padding: 10px 5px; background: transparent; border: none; color: var(--text-muted); font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 13px; }
         .tab-btn.active { background: var(--green); color: white; }
         
@@ -93,6 +94,13 @@
         
         input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--green); }
         input[type="checkbox"]:disabled { opacity: 0.5; cursor: wait; }
+
+        /* QA Log UI */
+        .qa-log-item { background: var(--bg-page); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px;}
+        .qa-log-header { display: flex; justify-content: space-between; align-items: center;}
+        .qa-log-trailer { color: var(--red); font-size: 14px; font-weight: bold; }
+        .qa-log-date { color: var(--text-muted); font-size: 11px; }
+        .qa-log-desc { font-size: 13px; line-height: 1.4; color: var(--text-main); }
 
         .login-overlay { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 20px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); }
         .login-overlay.hidden { display: none; }
@@ -172,7 +180,7 @@
                     <button class="btn-sync" id="syncBtn" onclick="forceSync()">🔄 Sync</button>
                     <button class="btn-scan" onclick="openScanner()">📸 Scan</button>
                     <button class="btn-check" onclick="openChecklists()">📝 Checklists</button>
-                    <button class="btn-qa" onclick="openQA()">⚠️ QA</button>
+                    <button class="btn-qa" onclick="openQA()">⚠️ QA Menu</button>
                 </div>
             </div>
         </div>
@@ -232,23 +240,15 @@
     <div id="checklistModal" class="modal">
         <div class="modal-content">
             <h3><span id="cl-trailer-id" style="color: var(--blue);">M 001</span> Checklists</h3>
-            <div class="checklist-tabs">
-                <button class="tab-btn active" id="tab-receive" onclick="switchTab('receive')">Receive</button>
-                <button class="tab-btn" id="tab-install" onclick="switchTab('install')">Install</button>
-                <button class="tab-btn" id="tab-cutbend" onclick="switchTab('cutbend')">Cut & Bend</button>
+            <div class="modal-tabs">
+                <button class="tab-btn active" id="tab-receive" onclick="switchChecklistTab('receive')">Receive</button>
+                <button class="tab-btn" id="tab-install" onclick="switchChecklistTab('install')">Install</button>
+                <button class="tab-btn" id="tab-cutbend" onclick="switchChecklistTab('cutbend')">Cut & Bend</button>
             </div>
             
-            <div id="list-receive" class="checklist-list">
-                <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
-            </div>
-
-            <div id="list-install" class="checklist-list" style="display: none;">
-                <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
-            </div>
-
-            <div id="list-cutbend" class="checklist-list" style="display: none;">
-                <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div>
-            </div>
+            <div id="list-receive" class="checklist-list"><div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div></div>
+            <div id="list-install" class="checklist-list" style="display: none;"><div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div></div>
+            <div id="list-cutbend" class="checklist-list" style="display: none;"><div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading tasks...</div></div>
 
             <button class="close-btn" onclick="closeChecklists()">Close Menu</button>
         </div>
@@ -263,12 +263,26 @@
     </div>
 
     <div id="qaModal" class="modal">
-        <div class="modal-content">
-            <h3>Report QA Issue</h3>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom:10px; font-weight: 600;">Trailer: <strong id="qa-trailer-id" style="color: var(--text-main);">None Selected</strong></p>
-            <textarea id="qa-text" class="modal-textarea" placeholder="Describe the issue... (e.g. Missing parts)"></textarea>
-            <button class="primary-button" style="background: var(--red);" onclick="submitQA(event)">Submit Report</button>
-            <button class="close-btn" onclick="closeQA()">Cancel</button>
+        <div class="modal-content" style="max-height: 90vh;">
+            <h3>Quality Assurance</h3>
+            <div class="modal-tabs">
+                <button class="tab-btn active" id="tab-qa-report" onclick="switchQaTab('report')">Report Issue</button>
+                <button class="tab-btn" id="tab-qa-list" onclick="switchQaTab('list')">View Log</button>
+            </div>
+
+            <div id="qa-view-report" style="flex-shrink: 0;">
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom:10px; font-weight: 600;">Trailer: <strong id="qa-trailer-id" style="color: var(--text-main);">None Selected</strong></p>
+                <textarea id="qa-text" class="modal-textarea" placeholder="Describe the issue... (e.g. Missing parts)"></textarea>
+                <button class="primary-button" id="qa-submit-btn" style="background: var(--red);" onclick="submitQA(event)">Submit Report</button>
+            </div>
+
+            <div id="qa-view-list" style="display: none; overflow-y: auto; flex: 1;">
+                <div id="qa-log-container">
+                    <div style="color: var(--text-muted); padding: 10px;">Loading logs...</div>
+                </div>
+            </div>
+
+            <button class="close-btn" onclick="closeQA()">Close Menu</button>
         </div>
     </div>
 
@@ -297,7 +311,7 @@
     <script>
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(e => console.warn(e)); }
 
-        let dashboardData = { totalStock: '0%', trailerList: [] };
+        let dashboardData = { totalStock: '0%', trailerList: [], qaList: [] };
         
         const matrixStages = ['Cut & Bend', 'Welding', 'Powder Coating', 'Storage', 'Pre-Assembly', 'Assembly', 'QC'];
 
@@ -312,19 +326,12 @@
         async function forceSync() {
             const syncBtn = document.getElementById('syncBtn');
             const originalText = syncBtn.innerText;
-            
-            syncBtn.innerText = "⏳...";
-            syncBtn.disabled = true;
-
+            syncBtn.innerText = "⏳..."; syncBtn.disabled = true;
             try {
                 await fetch('/api/force-sync');
                 await fetchTrailers(); 
-            } catch (err) {
-                console.error("Force sync failed", err);
-            } finally {
-                syncBtn.innerText = originalText;
-                syncBtn.disabled = false;
-            }
+            } catch (err) { console.error("Force sync failed", err);
+            } finally { syncBtn.innerText = originalText; syncBtn.disabled = false; }
         }
 
         async function fetchTrailers() {
@@ -350,6 +357,7 @@
                 document.getElementById('stock-text').innerText = dashboardData.totalStock;
 
                 updateDashboard();
+                renderQALog(); // Render the new QA Logs immediately
             } catch (error) { console.error('Failed to load data', error); }
         }
 
@@ -399,7 +407,6 @@
                     checkbox.onchange = async function() {
                         this.disabled = true;
                         const isChecked = this.checked;
-                        
                         try {
                             const res = await fetch('/api/update-matrix', {
                                 method: 'POST',
@@ -408,16 +415,12 @@
                             });
                             const data = await res.json();
                             if (!data.success) throw new Error("Blocked");
-                            
                             await fetchTrailers();
                         } catch(e) {
                             alert("Failed to save check! Make sure the Matrix Data sheet exists and has the Trailer ID.");
                             this.checked = !isChecked; 
-                        } finally {
-                            this.disabled = false;
-                        }
+                        } finally { this.disabled = false; }
                     };
-
                     td.appendChild(checkbox);
                     tr.appendChild(td);
                 });
@@ -426,7 +429,7 @@
         }
 
         // --- CHECKLIST LOGIC ---
-        function switchTab(tabName) {
+        function switchChecklistTab(tabName) {
             ['receive', 'install', 'cutbend'].forEach(name => {
                 document.getElementById(`tab-${name}`).classList.remove('active');
                 document.getElementById(`list-${name}`).style.display = 'none';
@@ -458,14 +461,11 @@
                     return;
                 }
 
-                let receiveHTML = '';
-                let installHTML = '';
-                
+                let receiveHTML = ''; let installHTML = '';
                 data.assembly.forEach((row, index) => {
                     const task = row[0] || 'Unknown Task';
                     const section = row[1] || 'No Section';
                     const isChecked = (row[2] === 'TRUE' || row[2] === 'true') ? 'checked' : '';
-                    
                     const itemHTML = `
                     <div class="checklist-item">
                         <div class="checklist-desc">
@@ -475,8 +475,7 @@
                         <input type="checkbox" ${isChecked} onchange="toggleTask('${trailerId}', 'assembly', ${index}, 'D', this)">
                     </div>`;
 
-                    if (task.toLowerCase().includes('receive')) { receiveHTML += itemHTML; } 
-                    else { installHTML += itemHTML; }
+                    if (task.toLowerCase().includes('receive')) { receiveHTML += itemHTML; } else { installHTML += itemHTML; }
                 });
                 
                 document.getElementById('list-receive').innerHTML = receiveHTML || '<div style="color: var(--text-muted); padding: 20px;">No receive tasks found.</div>';
@@ -486,8 +485,6 @@
                 data.cutBend.forEach((row, index) => {
                     const subNum = row[0] || 'N/A';
                     const group = row[1] || 'No Group';
-                    
-                    // FIXED: Swapped 'isCut' to 'D' and 'isBended' to 'E'
                     const isCut = (row[2] === 'TRUE' || row[2] === 'true') ? 'checked' : '';
                     const isBended = (row[3] === 'TRUE' || row[3] === 'true') ? 'checked' : '';
 
@@ -510,7 +507,6 @@
                     </div>`;
                 });
                 document.getElementById('list-cutbend').innerHTML = cbHTML || '<div style="color: var(--text-muted); padding: 20px;">No cut/bend tasks found.</div>';
-
             } catch (error) {
                 document.getElementById('list-receive').innerHTML = '<div style="color: var(--red); padding: 20px;">Error connecting to server.</div>';
                 document.getElementById('list-install').innerHTML = '<div style="color: var(--red); padding: 20px;">Error connecting to server.</div>';
@@ -537,7 +533,7 @@
             } finally { checkboxEl.disabled = false; }
         }
 
-        // --- SCANNER & QA LOGIC ---
+        // --- SCANNER LOGIC ---
         let html5QrcodeScanner; 
         function openScanner() {
             document.getElementById('scanModal').style.display = 'flex';
@@ -554,23 +550,74 @@
         }
         function closeScanner() { document.getElementById('scanModal').style.display = 'none'; if (html5QrcodeScanner) html5QrcodeScanner.clear(); }
 
+        // --- QA LOGIC (UPDATED WITH LOG VIEWER) ---
+        function switchQaTab(tabName) {
+            document.getElementById('tab-qa-report').classList.toggle('active', tabName === 'report');
+            document.getElementById('tab-qa-list').classList.toggle('active', tabName === 'list');
+            document.getElementById('qa-view-report').style.display = tabName === 'report' ? 'block' : 'none';
+            document.getElementById('qa-view-list').style.display = tabName === 'list' ? 'flex' : 'none';
+        }
+
+        function renderQALog() {
+            const container = document.getElementById('qa-log-container');
+            if (!dashboardData.qaList || dashboardData.qaList.length === 0) {
+                container.innerHTML = '<div style="padding: 10px; color: var(--text-muted);">No QA issues reported yet.</div>';
+                return;
+            }
+            let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            dashboardData.qaList.forEach(qa => {
+                html += `
+                <div class="qa-log-item">
+                    <div class="qa-log-header">
+                        <span class="qa-log-trailer">${qa.trailer}</span>
+                        <span class="qa-log-date">${qa.date}</span>
+                    </div>
+                    <div class="qa-log-desc">${qa.issue}</div>
+                </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
         function openQA() {
             const select = document.getElementById('trailerSelect');
-            if (select.selectedIndex === -1 || !dashboardData.trailerList[select.value]) { alert("Please select a trailer from the dropdown first!"); return; }
-            document.getElementById('qa-trailer-id').innerText = dashboardData.trailerList[select.value].id;
+            const trailerIdEl = document.getElementById('qa-trailer-id');
+            const submitBtn = document.getElementById('qa-submit-btn');
+
+            if (select.selectedIndex === -1 || !dashboardData.trailerList[select.value]) {
+                // No trailer selected - switch directly to the log view
+                trailerIdEl.innerText = "No trailer selected";
+                submitBtn.disabled = true;
+                switchQaTab('list');
+            } else {
+                // Trailer selected - ready to report
+                trailerIdEl.innerText = dashboardData.trailerList[select.value].id;
+                submitBtn.disabled = false;
+                switchQaTab('report');
+            }
             document.getElementById('qaModal').style.display = 'flex';
         }
+
         function closeQA() { document.getElementById('qaModal').style.display = 'none'; document.getElementById('qa-text').value = ''; }
+        
         async function submitQA(event) {
             const trailerId = document.getElementById('qa-trailer-id').innerText;
+            if (trailerId === "No trailer selected") { alert("Please select a trailer from the dashboard first."); return; }
+
             const issueText = document.getElementById('qa-text').value;
             if (issueText.trim() === '') { alert("Please type an issue description."); return; }
+            
             const submitBtn = event.target; const originalText = submitBtn.innerText;
             submitBtn.innerText = "Sending..."; submitBtn.disabled = true;
 
             try {
                 const res = await fetch('/api/qa-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ trailerId, issue: issueText }) });
-                if ((await res.json()).success) { alert("Reported to Google Sheets!"); closeQA(); } else { alert("Error saving issue."); }
+                if ((await res.json()).success) { 
+                    alert("Reported to Google Sheets!"); 
+                    await fetchTrailers(); // Immediately sync to pull the new issue down to the Log View
+                    document.getElementById('qa-text').value = '';
+                    switchQaTab('list'); // Jump to the log view to show them it was added
+                } else { alert("Error saving issue."); }
             } catch (error) { alert("Network error."); } finally { submitBtn.innerText = originalText; submitBtn.disabled = false; }
         }
 
